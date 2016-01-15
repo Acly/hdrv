@@ -13,7 +13,9 @@ cd build
 qmake ../hdrv.pro "BOOST_ROOT=/path/to/boost"
 ```
 
-Passing `-tp vc` generates project files for Visual Studio.
+Passing `-tp vc` to qmake generates project files for Visual Studio.
+After building runtime libraries can be copied with `windeployqt --qmldir ../src/view release/hdrv.exe`.
+
 Tested on Windows, x64, using Visual Studio 2015 Update 1.
 
 When building for a different platform the following dependencies will have to be built as

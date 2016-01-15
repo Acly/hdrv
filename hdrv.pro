@@ -6,9 +6,8 @@ CONFIG += qt
 INCLUDEPATH += src dependencies/include \
                $$BOOST_ROOT
 
-LIBS += -L$$PWD/dependencies/lib_win64_vc14_debug \
-        -lpic \
-        -lpfm
+win32:Debug:LIBS += -L$$PWD/dependencies/lib_win64_vc14_debug -lpic -lpfm
+win32:Release:LIBS += -L$$PWD/dependencies/lib_win64_vc14_release -lpic -lpfm
 
 HEADERS += src/image/Image.hpp \
            src/model/ImageCollection.hpp \
