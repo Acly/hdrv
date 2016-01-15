@@ -1,0 +1,11 @@
+<RCC>
+  <qresource prefix="/hdrv">
+    <file>src/view/ErrorMessage.qml</file>
+    <file>src/view/Main.qml</file>
+    <file>src/view/TabBar.qml</file>
+    <file>src/view/ImageProperties.qml</file>
+    <file>media/Open.png</file>
+    <file>media/Save.png</file>
+    <file>media/Properties.png</file>
+  </qresource>
+</RCC>
