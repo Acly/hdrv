@@ -6,6 +6,7 @@
 #include <QSize>
 #include <QPoint>
 #include <QUrl>
+#include <QVector4D>
 
 #include <image/Image.hpp>
 
@@ -25,6 +26,8 @@ class ImageDocument : public QObject
   Q_PROPERTY(qreal gamma READ gamma WRITE setGamma NOTIFY gammaChanged)
   Q_PROPERTY(qreal minGamma READ minGamma CONSTANT FINAL)
   Q_PROPERTY(qreal maxGamma READ maxGamma CONSTANT FINAL)
+  Q_PROPERTY(QPoint pixelPosition READ pixelPosition NOTIFY pixelPositionChanged)
+  Q_PROPERTY(QVector4D pixelValue READ pixelValue NOTIFY pixelValueChanged)
 
 public:
   ImageDocument(std::shared_ptr<Image> image, QUrl const& url, QObject * parent = nullptr);
@@ -45,12 +48,15 @@ public:
   qreal maxGamma() const { return 8.0; }
   float const* pixels() const { return image_->data(); }
   std::shared_ptr<Image> const& image() { return image_; }
+  QPoint pixelPosition() const { return pixelPosition_; }
+  QVector4D pixelValue() const;
   bool isDefault() const;
 
   void setPosition(QPointF pos);
   void move(QPointF offset);
   void setScaleIndex(int index);
   void setGamma(qreal gamma);
+  void setCurrentPixel(QPoint index);
 
 signals:
   void propertyChanged();
@@ -58,6 +64,8 @@ signals:
   void scaleChanged();
   void scaleIndexChanged();
   void gammaChanged();
+  void pixelPositionChanged();
+  void pixelValueChanged();
   
 private:
   QString name_;
@@ -65,6 +73,8 @@ private:
   QPointF position_;
   int scaleIndex_;
   qreal gamma_;
+  QPoint pixelPosition_;
+  QVector4D pixelValue_;
   std::shared_ptr<Image> image_;
 };
 

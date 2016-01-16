@@ -7,6 +7,7 @@ ImageArea::ImageArea()
 {
   connect(this, SIGNAL(windowChanged(QQuickWindow*)), this, SLOT(handleWindowChanged(QQuickWindow*)));
   setAcceptedMouseButtons(Qt::AllButtons);
+  setAcceptHoverEvents(true);
 }
 
 void ImageArea::setModel(ImageCollection * images)
@@ -86,6 +87,20 @@ void ImageArea::wheelEvent(QWheelEvent * event)
   if (images_) {
     int step = event->angleDelta().y() > 0 ? 1 : -1;
     images_->current()->setScaleIndex(images_->current()->scaleIndex() + step);
+  }
+}
+
+void ImageArea::hoverMoveEvent(QHoverEvent * event)
+{
+  if (images_ && images_->current()) {
+    auto & img = *images_->current();
+    QRectF bounds(QPointF(0, 0), QSizeF(img.width() * img.scale(), img.height() * img.scale()));
+    bounds.moveTo(0.5 * QPointF(width(), height()) - 0.5 * img.scale() * QPointF(img.width(), img.height()));
+    bounds.translate(-img.position());
+    if (bounds.contains(event->posF())) {
+      QPointF positionOnImage = (event->posF() - bounds.topLeft()) / img.scale();
+      images_->current()->setCurrentPixel(QPoint(positionOnImage.x(), positionOnImage.y()));
+    }
   }
 }
 

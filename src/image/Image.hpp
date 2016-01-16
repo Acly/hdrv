@@ -36,6 +36,11 @@ public:
   int sizeInBytes() const { return width_ * height_ * channels_ * sizeof(float); }
   float const* data() const { return data_.get(); }
 
+  float value(int x, int y, int channel) const
+  {
+    return data_[(y * width() + x) * channels() + channel];
+  }
+
   void storePFM(std::string const& path);
   void storePIC(std::string const& path);
   void storeEXR(std::string const& path);

@@ -4,6 +4,7 @@
 
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <QHoverEvent>
 
 #include <model/ImageCollection.hpp>
 #include <view/ImageRenderer.hpp>
@@ -20,9 +21,9 @@ public:
   ImageArea();
 
   ImageCollection * model() const { return images_; }
-  void setModel(ImageCollection * v);
-
   QColor const& color() const { return color_; }
+
+  void setModel(ImageCollection * v);
   void setColor(QColor const& color);
 
 signals:
@@ -30,7 +31,7 @@ signals:
   void colorChanged();
 
 public slots:
-  void sync();  
+  void sync();
   void cleanup() { renderer_ = nullptr; }
 
 protected:
@@ -38,6 +39,7 @@ protected:
   void mouseReleaseEvent(QMouseEvent * event) override;
   void mouseMoveEvent(QMouseEvent * event) override;
   void wheelEvent(QWheelEvent * event) override;
+  void hoverMoveEvent(QHoverEvent * event) override;
 
 private slots:
   void handleWindowChanged(QQuickWindow * window);

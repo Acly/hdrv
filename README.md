@@ -22,8 +22,7 @@ Tested using Visual Studio 2015 Update 1 x64.
 
 ### Other Platforms
 
-When building for a different platform the following dependencies will have to be built as
-static libraries and provided where the linker can find them:
+When building for a different platform the following dependencies will have to be installed or built from source and provided where the linker can find them:
 * [OpenEXR 2.2.0](http://www.openexr.com/)
 * [libpic 0.1](http://people.cs.kuleuven.be/~ares.lagae/libpic/)
 * [libpng 0.1](http://people.cs.kuleuven.be/~ares.lagae/libpfm/)
@@ -32,10 +31,11 @@ Entirely untested, but there is no platform-dependent code or anything else any 
 
 ## Use
 
-It's self-explanatory and intuitive GUI. Duh.
+It's a self-explanatory and intuitive GUI. Duh.
 
 ## TODO
 
 * Currently only supports Radiance PIC format (*.pic, *.hdr). Need more formats (already have code for PFM and OpenEXR but not wired up yet).
 * Show current pixel location and color under cursor
 * Show more stats (average / maximum / minimum color)
+* Better tone mapping

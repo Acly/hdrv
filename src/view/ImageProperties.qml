@@ -48,6 +48,10 @@ Rectangle {
     Text { text: gammaSlider.value.toFixed(1) }
   }
 
+  function vectorGet(vec, i) {
+    return i == 0 ? vec.x : (i == 1 ? vec.y : (i == 2 ? vec.z : vec.w));
+  }
+
   GridLayout {
     columns: 2
     columnSpacing: 5
@@ -61,5 +65,16 @@ Rectangle {
 
     Text { text: 'Resolution:' }
     Text { text: images.current.size.width + ' x ' + images.current.size.height }
+    Text { text: 'Cursor position:' }
+    Text { text: images.current.pixelPosition.x + ', ' + images.current.pixelPosition.y }
+    Text { text: 'Cursor texel value'; Layout.columnSpan: 2 }
+    Repeater {
+      model: images.current.channels
+      Text {
+        text: '  Channel ' + (index+1) + ': ' + vectorGet(images.current.pixelValue, index);
+        Layout.columnSpan: 2
+      }
+    }
   }
+
 }
