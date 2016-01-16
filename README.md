@@ -25,7 +25,7 @@ Tested using Visual Studio 2015 Update 1 x64.
 When building for a different platform the following dependencies will have to be installed or built from source and provided where the linker can find them:
 * [OpenEXR 2.2.0](http://www.openexr.com/)
 * [libpic 0.1](http://people.cs.kuleuven.be/~ares.lagae/libpic/)
-* [libpng 0.1](http://people.cs.kuleuven.be/~ares.lagae/libpfm/)
+* [libpfm 0.1](http://people.cs.kuleuven.be/~ares.lagae/libpfm/)
 
 Entirely untested, but there is no platform-dependent code or anything else any modern compiler shouldn't be able to handle.
 
