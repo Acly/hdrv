@@ -8,6 +8,7 @@ INCLUDEPATH += src dependencies/include \
 
 win32:Debug:LIBS += -L$$PWD/dependencies/lib_win64_vc14_debug -lpic -lpfm
 win32:Release:LIBS += -L$$PWD/dependencies/lib_win64_vc14_release -lpic -lpfm
+win32:RC_FILE = media/hdrv.rc
 
 HEADERS += src/image/Image.hpp \
            src/model/ImageCollection.hpp \

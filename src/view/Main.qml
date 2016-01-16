@@ -10,6 +10,7 @@ ApplicationWindow {
   height: 800
   visible: true
   color: 'black'
+  title: images.current.name + ' - hdrv 0.2'
 
   ColumnLayout {
     anchors.fill: parent
