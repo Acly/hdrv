@@ -6,23 +6,29 @@ GUI which displays HDR images, no bullshit. Need to come up with a proper name s
 
 * Install Qt 5.5
 * Download [boost](http://www.boost.org/) (headers are sufficient, no need to build)
-* Clone the repository
-* ```
+* Clone the repository from `https://github.com/Acly/hdrv.git`
+
+### Windows
+```
 mkdir build
 cd build   
-qmake ../hdrv.pro "BOOST_ROOT=/path/to/boost"
+qmake -tp vc ../hdrv.pro "BOOST_ROOT=/path/to/boost"
 ```
 
-Passing `-tp vc` to qmake generates project files for Visual Studio.
-After building runtime libraries can be copied with `windeployqt --qmldir ../src/view release/hdrv.exe`.
+This generates a project file which can be used to build the application with Visual Studio.
+After building, runtime libraries can be copied with `windeployqt --qmldir ../src/view release/hdrv.exe`.
 
-Tested on Windows, x64, using Visual Studio 2015 Update 1.
+Tested using Visual Studio 2015 Update 1 x64.
+
+### Other Platforms
 
 When building for a different platform the following dependencies will have to be built as
 static libraries and provided where the linker can find them:
 * [OpenEXR 2.2.0](http://www.openexr.com/)
 * [libpic 0.1](http://people.cs.kuleuven.be/~ares.lagae/libpic/)
 * [libpng 0.1](http://people.cs.kuleuven.be/~ares.lagae/libpfm/)
+
+Entirely untested, but there is no platform-dependent code or anything else any modern compiler shouldn't be able to handle.
 
 ## Use
 
