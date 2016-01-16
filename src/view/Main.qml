@@ -8,65 +8,65 @@ import Hdrv 1.0
 ApplicationWindow {
   width: 1200
   height: 800
-	visible: true
-	color: 'black'
+  visible: true
+  color: 'black'
 
-	ColumnLayout {
-		anchors.fill: parent
-		spacing: 0
+  ColumnLayout {
+    anchors.fill: parent
+    spacing: 0
 
-		Rectangle {
-			color: '#404040'
-			Layout.preferredHeight: 24
-			Layout.fillWidth: true
+    Rectangle {
+      color: '#404040'
+      Layout.preferredHeight: 24
+      Layout.fillWidth: true
 
-			RowLayout {
-				anchors.fill: parent
+      RowLayout {
+        anchors.fill: parent
 
-				TabBar {
-					Layout.fillWidth: true
-					Layout.fillHeight: true
-				}
+        TabBar {
+          Layout.fillWidth: true
+          Layout.fillHeight: true
+        }
 
-				Button {
-					id: imagePropertiesButton
-					Layout.preferredWidth: 30
-					Layout.preferredHeight: 20
-					Layout.alignment: Qt.AlignBottom
-					iconSource: 'qrc:/hdrv/media/Properties.png'
-					checkable: true
-					style: ButtonStyle {
-						background: Item {
-							Rectangle {
-								anchors.fill: parent
-								anchors.rightMargin: 4
-								anchors.leftMargin: 4
-								color: control.checked || control.hovered ? '#FAFAFA' : '#C0C0C0'
-							}
-						}
-					}
-				}
+        Button {
+          id: imagePropertiesButton
+          Layout.preferredWidth: 30
+          Layout.preferredHeight: 20
+          Layout.alignment: Qt.AlignBottom
+          iconSource: 'qrc:/hdrv/media/Properties.png'
+          checkable: true
+          style: ButtonStyle {
+            background: Item {
+              Rectangle {
+                anchors.fill: parent
+                anchors.rightMargin: 4
+                anchors.leftMargin: 4
+                color: control.checked || control.hovered ? '#FAFAFA' : '#C0C0C0'
+              }
+            }
+          }
+        }
 
-			}			
-		}
+      }
+    }
 
-		Rectangle {
-			Layout.preferredHeight: 4
-			Layout.fillWidth: true
-			color: '#FAFAFA'
-		}
+    Rectangle {
+      Layout.preferredHeight: 4
+      Layout.fillWidth: true
+      color: '#FAFAFA'
+    }
 
-		RowLayout {
-			Layout.fillWidth: true
-			Layout.fillHeight: true
-			spacing: 0
+    RowLayout {
+      Layout.fillWidth: true
+      Layout.fillHeight: true
+      spacing: 0
 
-			ImageArea {
-				color: 'white'
-				model: images
-				Layout.fillHeight: true
-				Layout.fillWidth: true
-        
+      ImageArea {
+        color: 'white'
+        model: images
+        Layout.fillHeight: true
+        Layout.fillWidth: true
+
         DropArea {
             id: dropArea;
             anchors.fill: parent;
@@ -79,24 +79,24 @@ ApplicationWindow {
               }
             }
         }
-        
+
         ErrorMessage { id: errorMessageDialog; show: false }
-			}
+      }
 
-			Rectangle {
-				Layout.fillHeight: true
-				Layout.preferredWidth: 1
-				color: 'darkgrey'		
-			}
+      Rectangle {
+        Layout.fillHeight: true
+        Layout.preferredWidth: 1
+        color: 'darkgrey'
+      }
 
-			ImageProperties {
-				id: imageProperties
-				visible: imagePropertiesButton.checked
-				Layout.fillHeight: true
-				Layout.preferredWidth: 240
-			}
-		}
-    
+      ImageProperties {
+        id: imageProperties
+        visible: imagePropertiesButton.checked
+        Layout.fillHeight: true
+        Layout.preferredWidth: 240
+      }
+    }
+
     Keys.onPressed: {
       if (event.key == Qt.Key_Plus) {
         images.current.gamma += 0.2
@@ -106,8 +106,8 @@ ApplicationWindow {
         images.current.position = Qt.point(0, 0)
       } else if (event.key == Qt.Key_W && event.modifiers & Qt.ControlModifier) {
         if (images.items.length > 1) images.remove(images.currentIndex);
-				else Qt.quit();
+        else Qt.quit();
       }
     }
-	}
+  }
 }

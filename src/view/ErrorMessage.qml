@@ -2,7 +2,7 @@ import QtQuick 2.3
 import Qt.labs.folderlistmodel 1.0
 import Qt.labs.settings 1.0
 import QtQuick.Dialogs 1.2
-        
+
 MessageDialog {
   property bool show: true
 
