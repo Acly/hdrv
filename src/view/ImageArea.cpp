@@ -36,7 +36,7 @@ void ImageArea::setColor(QColor const& color)
 RenderRegion calculateRenderRegion(QSize windowSize, QPointF position, qreal width, qreal height, qreal ratio)
 {
   int w = int(ratio * width);
-  int h = int(ratio * (windowSize.height() - position.y()));
+  int h = int(ratio * height);
   int x = int(ratio * position.x());
   int y = int(ratio * (windowSize.height() - position.y() - height));
   return { QPoint(x, y), QSize(w, h) };
@@ -50,8 +50,9 @@ void ImageArea::sync()
       connect(window(), SIGNAL(beforeRendering()), renderer_.get(), SLOT(paint()), Qt::DirectConnection);
     }
     auto & img = *images_->current();
+    auto pos = mapToItem(nullptr, position());
     qreal ratio = window()->devicePixelRatio();
-    renderer_->setRenderRegion(calculateRenderRegion(window()->size(), position(), width(), height(), ratio));
+    renderer_->setRenderRegion(calculateRenderRegion(window()->size(), pos, width(), height(), ratio));
     renderer_->setClearColor(color_);
     renderer_->updateImages(images_->vector());
     renderer_->setCurrent(img.image());

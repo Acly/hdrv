@@ -60,9 +60,11 @@ void ImageDocument::setGamma(qreal gamma)
 
 void ImageDocument::setCurrentPixel(QPoint index)
 {
-  pixelPosition_ = index;
-  emit pixelPositionChanged();
-  emit pixelValueChanged();
+  if (index != pixelPosition_ && index.x() < width() && index.y() < height()) {
+    pixelPosition_ = index;
+    emit pixelPositionChanged();
+    emit pixelValueChanged();
+  }
 }
 
 QVector4D ImageDocument::pixelValue() const
