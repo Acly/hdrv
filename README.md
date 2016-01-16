@@ -35,7 +35,9 @@ It's a self-explanatory and intuitive GUI. Duh.
 
 ## TODO
 
-* Currently only supports Radiance PIC format (*.pic, *.hdr). Need more formats (already have code for PFM and OpenEXR but not wired up yet).
 * Show current pixel location and color under cursor
 * Show more stats (average / maximum / minimum color)
 * Better tone mapping
+* Better support for existing formats (encodings, layouts)
+* Support for OpenEXR formats
+* Conversion between formats (image export)

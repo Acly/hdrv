@@ -11,6 +11,7 @@ MessageDialog {
   icon: StandardIcon.Critical
   standardButtons: StandardButton.Ok
   text: 'Could not load image file.'
+  informativeText: images.errorMessage
   Component.onCompleted: visible = show
   onAccepted: if (show) Qt.quit()
 }

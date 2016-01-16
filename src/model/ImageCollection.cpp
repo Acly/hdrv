@@ -1,5 +1,7 @@
 #include <model/ImageCollection.hpp>
 
+#include <QFileInfo>
+
 namespace hdrv {
 
 ImageCollection::ImageCollection(QObject * parent)
@@ -22,15 +24,29 @@ void ImageCollection::add(ImageDocument * image)
   emit currentChanged();
 }
 
-bool ImageCollection::load(QUrl const& url)
+bool ImageCollection::add(QUrl const& url, Result<Image> && image)
 {
-  setLastLoadedFile(url.toLocalFile());
-  auto image = Image::loadPIC(url.toLocalFile().toStdString());
   if (image) {
     add(new ImageDocument(std::make_shared<Image>(std::move(image).value()), url, this));
-    return true;
+  } else {
+    setError(QString::fromStdString(image.error()) + " while loading file " + url.toLocalFile());
   }
-  qDebug() << QString::fromStdString(image.error());
+  return (bool)image;
+}
+
+bool ImageCollection::load(QUrl const& url)
+{
+  QFileInfo file(url.toLocalFile());
+  if (!file.exists()) {
+    setError("File " + file.absoluteFilePath() + " does not exist.");
+    return false;
+  }
+  if (file.suffix() == "hdr" || file.suffix() == "pic") {
+    return add(url, Image::loadPIC(file.absoluteFilePath().toStdString()));
+  } else if (file.suffix() == "pfm" || file.suffix() == "ppm") {
+    return add(url, Image::loadPFM(file.absoluteFilePath().toStdString()));
+  }
+  setError("Unknown file extension: " + file.suffix());
   return false;
 }
 
@@ -54,10 +70,10 @@ void ImageCollection::setCurrentIndex(int i)
   }
 }
 
-void ImageCollection::setLastLoadedFile(QString const& filename)
+void ImageCollection::setError(QString const& message)
 {
-  lastLoadedFile_ = filename;
-  emit lastLoadedFileChanged();
+  errorMessage_ = message;
+  emit errorMessageChanged();
 }
 
 }
