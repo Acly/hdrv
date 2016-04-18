@@ -26,6 +26,7 @@ class ImageDocument : public QObject
   Q_PROPERTY(qreal gamma READ gamma WRITE setGamma NOTIFY gammaChanged)
   Q_PROPERTY(qreal minGamma READ minGamma CONSTANT FINAL)
   Q_PROPERTY(qreal maxGamma READ maxGamma CONSTANT FINAL)
+  Q_PROPERTY(bool isFloat READ isFloat CONSTANT FINAL)
   Q_PROPERTY(QPoint pixelPosition READ pixelPosition NOTIFY pixelPositionChanged)
   Q_PROPERTY(QVector4D pixelValue READ pixelValue NOTIFY pixelValueChanged)
 
@@ -43,10 +44,11 @@ public:
   float scale() const;
   int scaleIndex() const { return scaleIndex_; }
   int maxScaleIndex() const { return 4; }
-  qreal gamma() const { return gamma_; }
+  qreal gamma() const { return image_->format() == Image::Float ? gamma_ : 2.2; }
   qreal minGamma() const { return 1.0; }
   qreal maxGamma() const { return 8.0; }
-  float const* pixels() const { return image_->data(); }
+  bool isFloat() const { return image_->format() == Image::Float; }
+  void const* pixels() const { return image_->data(); }
   std::shared_ptr<Image> const& image() { return image_; }
   QPoint pixelPosition() const { return pixelPosition_; }
   QVector4D pixelValue() const;

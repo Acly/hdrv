@@ -109,7 +109,7 @@ ListView {
       id: loadImageDialog
       title: 'Choose an image file'
       folder: shortcuts.pictures
-      nameFilters: [ 'HDRI image files (*.hdr *.pic *.pfm *.ppm)', 'All files (*)' ]
+      nameFilters: [ 'Image files (*.png *.jpg *.bmp *.gif)', 'HDRI image files (*.hdr *.pic *.pfm *.ppm)', 'All files (*)' ]
       selectMultiple: true
       onAccepted: {
         for (var i = 0; i < loadImageDialog.fileUrls.length; ++i) {

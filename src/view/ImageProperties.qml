@@ -43,6 +43,7 @@ Rectangle {
       property bool initialized: false // workaround, slider sets 1.0 at start up (?)
       onValueChanged: if (initialized) images.current.gamma = gammaSlider.value;
       Component.onCompleted: initialized = true
+      enabled: images.current.isFloat
     }
 
     Text { text: gammaSlider.value.toFixed(1) }

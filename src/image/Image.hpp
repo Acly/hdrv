@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 #include <boost/optional.hpp>
 
 namespace hdrv {
@@ -26,32 +27,48 @@ private:
 class Image
 {
 public:
+  enum Format { Byte, Float };
+
+  static Image makeEmpty();
+
   static Result<Image> loadPFM(std::string const& path);
   static Result<Image> loadPIC(std::string const& path);
   static Result<Image> loadEXR(std::string const& path);
+  static Result<Image> loadImage(std::string const& path);
 
   int width() const { return width_; }
   int height() const { return height_; }
   int channels() const { return channels_; }
-  int sizeInBytes() const { return width_ * height_ * channels_ * sizeof(float); }
-  float const* data() const { return data_.get(); }
+  int pixelSizeInBytes() const { return format_ == Byte ? sizeof(uint8_t) : sizeof(float); }
+  int sizeInBytes() const { return width_ * height_ * channels_ * pixelSizeInBytes(); }
+  Format format() const { return format_; }
+  void const* data() const { return data_.data(); }
 
-  float value(int x, int y, int channel) const
+  template<typename T>
+  T value(int x, int y, int channel) const
   {
-    return data_[(y * width() + x) * channels() + channel];
+    auto i = (y * width() + x) * channels() + channel;
+    if (format_ == Float) {
+      float const* d = reinterpret_cast<float const*>(data_.data());
+      return T(d[i]);
+    } else {
+      uint8_t const* d = reinterpret_cast<uint8_t const*>(data_.data());
+      return T(d[i]);
+    } 
   }
 
   void storePFM(std::string const& path);
   void storePIC(std::string const& path);
   void storeEXR(std::string const& path);
 
-  Image(int w, int h, int c, std::unique_ptr<float[]> data);
+  Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data);
 
 private:
   int width_;
   int height_;
   int channels_;
-  std::unique_ptr<float[]> data_;
+  Format format_;
+  std::vector<uint8_t> data_;
 };
 
 }
