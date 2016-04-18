@@ -15,12 +15,13 @@ uniform sampler2D tex;
 uniform vec2 position;
 uniform vec2 scale;
 uniform float gamma;
+uniform float brightness;
 varying highp vec2 coords;
 
 void main()
 {
   vec4 texel = texture2D(tex, (coords - position) / scale);
-  vec3 color = pow(texel.xyz, vec3(gamma));
+  vec3 color = brightness * pow(texel.xyz, vec3(gamma));
   gl_FragColor = vec4(color, texel.w);
 })";
 
@@ -125,6 +126,7 @@ void ImageRenderer::paint()
   program_->setUniformValue("tex", 0);
   program_->setUniformValue("position", texturePosition(regionSize, imageSize, settings_.position));
   program_->setUniformValue("scale", textureScale(regionSize, imageSize));
+  program_->setUniformValue("brightness", pow(2.0f, settings_.brightness));
   program_->setUniformValue("gamma", current_->format() == Image::Float ? 1.0f / settings_.gamma : 1.0f);
 
   glViewport(region.offset.x(), region.offset.y(), region.size.width(), region.size.height());

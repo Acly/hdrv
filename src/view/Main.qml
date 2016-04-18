@@ -63,7 +63,7 @@ ApplicationWindow {
       spacing: 0
 
       ImageArea {
-        color: 'white'
+        color: 'black'
         model: images
         Layout.fillHeight: true
         Layout.fillWidth: true
@@ -100,9 +100,9 @@ ApplicationWindow {
 
     Keys.onPressed: {
       if (event.key == Qt.Key_Plus) {
-        images.current.gamma += 0.2
+        images.current.brightness = Math.round(images.current.brightness + 1.0)
       } else if (event.key == Qt.Key_Minus) {
-        images.current.gamma -= 0.2
+        images.current.brightness = Math.round(images.current.brightness - 1.0)
       } else if (event.key == Qt.Key_R) {
         images.current.position = Qt.point(0, 0)
       } else if (event.key == Qt.Key_W && event.modifiers & Qt.ControlModifier) {

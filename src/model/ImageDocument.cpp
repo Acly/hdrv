@@ -16,6 +16,7 @@ ImageDocument::ImageDocument(std::shared_ptr<Image> image, QUrl const& url, QObj
   , name_(url.fileName())
   , url_(url)
   , scaleIndex_(2)
+  , brightness_(0.0f)
   , gamma_(2.2f)
   , image_(std::move(image))
 {}
@@ -45,6 +46,15 @@ void ImageDocument::setScaleIndex(int index)
     scaleIndex_ = index;
     emit scaleIndexChanged();
     emit scaleChanged();
+    emit propertyChanged();
+  }
+}
+
+void ImageDocument::setBrightness(qreal brightness)
+{
+  if (!qFuzzyCompare(brightness_, brightness) && brightness >= minBrightness() && brightness <= maxBrightness()) {
+    brightness_ = brightness;
+    emit brightnessChanged();
     emit propertyChanged();
   }
 }
