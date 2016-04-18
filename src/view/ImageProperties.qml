@@ -29,7 +29,13 @@ Rectangle {
       onValueChanged: images.current.scaleIndex = scaleSlider.value;
     }
 
-    Text { text: images.current.scale + 'x'; Layout.minimumWidth: 30 }
+    Text {
+      text: images.current.scale + 'x'; Layout.minimumWidth: 30
+      MouseArea {
+        anchors.fill: parent
+        onDoubleClicked: images.current.scaleIndex = 2
+      }
+    }
 
     Text { text: 'Brightness'; Layout.columnSpan: 2 }
 
@@ -45,7 +51,13 @@ Rectangle {
       Component.onCompleted: initialized = true
     }
 
-    Text { text: brightnessSlider.value.toFixed(1) }
+    Text {
+      text: brightnessSlider.value.toFixed(1)
+      MouseArea {
+        anchors.fill: parent
+        onDoubleClicked: images.current.brightness = 1.0
+      }
+    }
 
     Text { text: 'Gamma'; Layout.columnSpan: 2 }
 
@@ -62,7 +74,13 @@ Rectangle {
       enabled: images.current.isFloat
     }
 
-    Text { text: gammaSlider.value.toFixed(1) }
+    Text {
+      text: gammaSlider.value.toFixed(1)
+      MouseArea {
+        anchors.fill: parent
+        onDoubleClicked: images.current.gamma = 2.2
+      }
+    }
   }
 
   function vectorGet(vec, i) {
