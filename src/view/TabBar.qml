@@ -1,4 +1,4 @@
-import QtQuick 2.3
+import QtQuick 2.5
 import QtQuick.Controls 1.2
 import QtQuick.Controls.Styles 1.4
 import Qt.labs.folderlistmodel 1.0
@@ -75,6 +75,13 @@ ListView {
             if (images.items.length > 1) images.remove(index);
             else Qt.quit();
           }
+        }
+
+        Shortcut {
+          sequence: (index + 1).toString()
+          enabled: (index + 1) <= 9
+          context: Qt.ApplicationShortcut
+          onActivated: images.currentIndex = index
         }
 
         MouseArea {
