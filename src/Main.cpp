@@ -22,8 +22,8 @@ int main(int argc, char * argv[])
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("images", &images);
 
-  if (app.arguments().count() > 1) {
-    if (!images.load(QUrl::fromLocalFile(app.arguments()[1]))) {
+  for (int i=1; i<app.arguments().count(); ++i) {
+    if (!images.load(QUrl::fromLocalFile(app.arguments()[i]))) {
       engine.load(QUrl("qrc:/hdrv/src/view/ErrorMessage.qml"));
       return app.exec();
     }
