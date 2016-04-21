@@ -15,12 +15,13 @@ uniform sampler2D tex;
 uniform vec2 position;
 uniform vec2 scale;
 uniform float gamma;
+uniform float brightness;
 varying highp vec2 coords;
 
 void main()
 {
   vec4 texel = texture2D(tex, (coords - position) / scale);
-  vec3 color = pow(texel.xyz, vec3(gamma));
+  vec3 color = brightness * pow(texel.xyz, vec3(gamma));
   gl_FragColor = vec4(color, texel.w);
 })";
 
@@ -48,13 +49,18 @@ QOpenGLTexture::PixelFormat pixelFormat(Image const& image)
   return image.channels() == 3 ? QOpenGLTexture::RGB : QOpenGLTexture::RGBA;
 }
 
+QOpenGLTexture::PixelType pixelType(Image const& image)
+{
+  return image.format() == Image::Float ? QOpenGLTexture::PixelType::Float32 : QOpenGLTexture::PixelType::UInt8;
+}
+
 std::unique_ptr<QOpenGLTexture> createTexture(Image const& image)
 {
   auto texture = std::make_unique<QOpenGLTexture>(QOpenGLTexture::Target2D);
   texture->setSize(image.width(), image.height());
   texture->setFormat(format(image));
-  texture->allocateStorage(pixelFormat(image), QOpenGLTexture::PixelType::Float32);
-  texture->setData(pixelFormat(image), QOpenGLTexture::PixelType::Float32, image.data());
+  texture->allocateStorage(pixelFormat(image), pixelType(image));
+  texture->setData(pixelFormat(image), pixelType(image), image.data());
   texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
   texture->setMagnificationFilter(QOpenGLTexture::Linear);
   texture->setWrapMode(QOpenGLTexture::ClampToBorder);
@@ -120,7 +126,8 @@ void ImageRenderer::paint()
   program_->setUniformValue("tex", 0);
   program_->setUniformValue("position", texturePosition(regionSize, imageSize, settings_.position));
   program_->setUniformValue("scale", textureScale(regionSize, imageSize));
-  program_->setUniformValue("gamma", 1.0f / settings_.gamma);
+  program_->setUniformValue("brightness", pow(2.0f, settings_.brightness));
+  program_->setUniformValue("gamma", current_->format() == Image::Float ? 1.0f / settings_.gamma : 1.0f);
 
   glViewport(region.offset.x(), region.offset.y(), region.size.width(), region.size.height());
 

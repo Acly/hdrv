@@ -22,6 +22,7 @@ struct ImageSettings
 {
   QVector2D position;
   float scale;
+  float brightness;
   float gamma;
 };
 

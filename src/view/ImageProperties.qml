@@ -29,7 +29,35 @@ Rectangle {
       onValueChanged: images.current.scaleIndex = scaleSlider.value;
     }
 
-    Text { text: images.current.scale + 'x'; Layout.minimumWidth: 30 }
+    Text {
+      text: images.current.scale + 'x'; Layout.minimumWidth: 30
+      MouseArea {
+        anchors.fill: parent
+        onDoubleClicked: images.current.scaleIndex = 2
+      }
+    }
+
+    Text { text: 'Brightness'; Layout.columnSpan: 2 }
+
+    Slider {
+      id: 'brightnessSlider'
+      Layout.fillWidth: true
+      minimumValue: images.current.minBrightness
+      maximumValue: images.current.maxBrightness
+      stepSize: 0.1
+      value: images.current.brightness
+      property bool initialized: false // workaround, slider sets 1.0 at start up (?)
+      onValueChanged: if (initialized) images.current.brightness = brightnessSlider.value;
+      Component.onCompleted: initialized = true
+    }
+
+    Text {
+      text: brightnessSlider.value.toFixed(1)
+      MouseArea {
+        anchors.fill: parent
+        onDoubleClicked: images.current.brightness = 1.0
+      }
+    }
 
     Text { text: 'Gamma'; Layout.columnSpan: 2 }
 
@@ -43,9 +71,16 @@ Rectangle {
       property bool initialized: false // workaround, slider sets 1.0 at start up (?)
       onValueChanged: if (initialized) images.current.gamma = gammaSlider.value;
       Component.onCompleted: initialized = true
+      enabled: images.current.isFloat
     }
 
-    Text { text: gammaSlider.value.toFixed(1) }
+    Text {
+      text: gammaSlider.value.toFixed(1)
+      MouseArea {
+        anchors.fill: parent
+        onDoubleClicked: images.current.gamma = 2.2
+      }
+    }
   }
 
   function vectorGet(vec, i) {

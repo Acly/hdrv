@@ -23,9 +23,13 @@ class ImageDocument : public QObject
   Q_PROPERTY(float scale READ scale NOTIFY scaleChanged)
   Q_PROPERTY(int scaleIndex READ scaleIndex WRITE setScaleIndex NOTIFY scaleIndexChanged)
   Q_PROPERTY(int maxScaleIndex READ maxScaleIndex CONSTANT FINAL)
+  Q_PROPERTY(qreal brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
+  Q_PROPERTY(qreal minBrightness READ minBrightness CONSTANT FINAL)
+  Q_PROPERTY(qreal maxBrightness READ maxBrightness CONSTANT FINAL)
   Q_PROPERTY(qreal gamma READ gamma WRITE setGamma NOTIFY gammaChanged)
   Q_PROPERTY(qreal minGamma READ minGamma CONSTANT FINAL)
   Q_PROPERTY(qreal maxGamma READ maxGamma CONSTANT FINAL)
+  Q_PROPERTY(bool isFloat READ isFloat CONSTANT FINAL)
   Q_PROPERTY(QPoint pixelPosition READ pixelPosition NOTIFY pixelPositionChanged)
   Q_PROPERTY(QVector4D pixelValue READ pixelValue NOTIFY pixelValueChanged)
 
@@ -43,10 +47,14 @@ public:
   float scale() const;
   int scaleIndex() const { return scaleIndex_; }
   int maxScaleIndex() const { return 4; }
-  qreal gamma() const { return gamma_; }
+  qreal brightness() const { return brightness_; }
+  qreal minBrightness() const { return -10.0; }
+  qreal maxBrightness() const { return 10.0; }
+  qreal gamma() const { return image_->format() == Image::Float ? gamma_ : 2.2; }
   qreal minGamma() const { return 1.0; }
   qreal maxGamma() const { return 8.0; }
-  float const* pixels() const { return image_->data(); }
+  bool isFloat() const { return image_->format() == Image::Float; }
+  void const* pixels() const { return image_->data(); }
   std::shared_ptr<Image> const& image() { return image_; }
   QPoint pixelPosition() const { return pixelPosition_; }
   QVector4D pixelValue() const;
@@ -55,6 +63,7 @@ public:
   void setPosition(QPointF pos);
   void move(QPointF offset);
   void setScaleIndex(int index);
+  void setBrightness(qreal brightness);
   void setGamma(qreal gamma);
   void setCurrentPixel(QPoint index);
 
@@ -63,6 +72,7 @@ signals:
   void positionChanged();
   void scaleChanged();
   void scaleIndexChanged();
+  void brightnessChanged();
   void gammaChanged();
   void pixelPositionChanged();
   void pixelValueChanged();
@@ -72,6 +82,7 @@ private:
   QUrl url_;
   QPointF position_;
   int scaleIndex_;
+  qreal brightness_;
   qreal gamma_;
   QPoint pixelPosition_;
   QVector4D pixelValue_;

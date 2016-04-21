@@ -45,6 +45,8 @@ bool ImageCollection::load(QUrl const& url)
     return add(url, Image::loadPIC(file.absoluteFilePath().toStdString()));
   } else if (file.suffix() == "pfm" || file.suffix() == "ppm") {
     return add(url, Image::loadPFM(file.absoluteFilePath().toStdString()));
+  } else {
+    return add(url, Image::loadImage(file.absoluteFilePath().toStdString()));
   }
   setError("Unknown file extension: " + file.suffix());
   return false;
