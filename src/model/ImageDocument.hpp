@@ -20,9 +20,7 @@ class ImageDocument : public QObject
   Q_PROPERTY(QSize size READ size CONSTANT)
   Q_PROPERTY(int channels READ channels CONSTANT)
   Q_PROPERTY(QPointF position READ position WRITE setPosition NOTIFY positionChanged)
-  Q_PROPERTY(float scale READ scale NOTIFY scaleChanged)
-  Q_PROPERTY(int scaleIndex READ scaleIndex WRITE setScaleIndex NOTIFY scaleIndexChanged)
-  Q_PROPERTY(int maxScaleIndex READ maxScaleIndex CONSTANT FINAL)
+  Q_PROPERTY(float scale READ scale WRITE setScale NOTIFY scaleChanged)
   Q_PROPERTY(qreal brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
   Q_PROPERTY(qreal minBrightness READ minBrightness CONSTANT FINAL)
   Q_PROPERTY(qreal maxBrightness READ maxBrightness CONSTANT FINAL)
@@ -45,8 +43,6 @@ public:
   QSize size() const { return QSize(image_->width(), image_->height()); }
   int channels() const { return image_->channels(); }
   float scale() const;
-  int scaleIndex() const { return scaleIndex_; }
-  int maxScaleIndex() const { return 4; }
   qreal brightness() const { return brightness_; }
   qreal minBrightness() const { return -10.0; }
   qreal maxBrightness() const { return 10.0; }
@@ -62,7 +58,7 @@ public:
 
   void setPosition(QPointF pos);
   void move(QPointF offset);
-  void setScaleIndex(int index);
+  void setScale(qreal scale);
   void setBrightness(qreal brightness);
   void setGamma(qreal gamma);
   void setCurrentPixel(QPoint index);
@@ -71,7 +67,6 @@ signals:
   void propertyChanged();
   void positionChanged();
   void scaleChanged();
-  void scaleIndexChanged();
   void brightnessChanged();
   void gammaChanged();
   void pixelPositionChanged();
@@ -81,7 +76,7 @@ private:
   QString name_;
   QUrl url_;
   QPointF position_;
-  int scaleIndex_;
+  qreal scale_;
   qreal brightness_;
   qreal gamma_;
   QPoint pixelPosition_;

@@ -62,7 +62,7 @@ std::unique_ptr<QOpenGLTexture> createTexture(Image const& image)
   texture->allocateStorage(pixelFormat(image), pixelType(image));
   texture->setData(pixelFormat(image), pixelType(image), image.data());
   texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
-  texture->setMagnificationFilter(QOpenGLTexture::Linear);
+  texture->setMagnificationFilter(QOpenGLTexture::Nearest);
   texture->setWrapMode(QOpenGLTexture::ClampToBorder);
   texture->generateMipMaps();
   return texture;

@@ -1,4 +1,4 @@
-import QtQuick 2.3
+import QtQuick 2.5
 import QtQuick.Controls 1.2
 import QtQuick.Layouts 1.2
 import Hdrv 1.0
@@ -19,21 +19,23 @@ Rectangle {
 
     Text { text: 'Zoom'; Layout.columnSpan: 2 }
 
-    Slider {
-      id: 'scaleSlider'
+    TextField {
+      id: 'scaleText'
       Layout.fillWidth: true
-      minimumValue: 0
-      maximumValue: images.current.maxScaleIndex
-      stepSize: 1
-      value: images.current.scaleIndex
-      onValueChanged: images.current.scaleIndex = scaleSlider.value;
+      validator: DoubleValidator {
+        notation: DoubleValidator.StandardNotation
+        decimals: 3
+      }
+      focus: true
+      text: Math.round(images.current.scale * 10000.0) / 10000.0
+      onEditingFinished: images.current.scale = scaleText.text
     }
 
     Text {
-      text: images.current.scale + 'x'; Layout.minimumWidth: 30
+      text: 'x'
       MouseArea {
         anchors.fill: parent
-        onDoubleClicked: images.current.scaleIndex = 2
+        onDoubleClicked: images.current.scale = 1.0
       }
     }
 
@@ -55,7 +57,7 @@ Rectangle {
       text: brightnessSlider.value.toFixed(1)
       MouseArea {
         anchors.fill: parent
-        onDoubleClicked: images.current.brightness = 1.0
+        onDoubleClicked: images.current.brightness = 0.0
       }
     }
 

@@ -105,6 +105,7 @@ ApplicationWindow {
         images.current.brightness = Math.round(images.current.brightness - 1.0)
       } else if (event.key == Qt.Key_R) {
         images.current.position = Qt.point(0, 0)
+        images.current.scale = 1.0
       } else if (event.key == Qt.Key_W && event.modifiers & Qt.ControlModifier) {
         if (images.items.length > 1) images.remove(images.currentIndex);
         else Qt.quit();

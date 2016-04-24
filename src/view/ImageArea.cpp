@@ -60,6 +60,42 @@ void ImageArea::sync()
   }
 }
 
+QRectF ImageArea::imageBounds(ImageDocument const & img) const
+{
+  QRectF bounds(QPointF(0, 0), QSizeF(img.width() * img.scale(), img.height() * img.scale()));
+  bounds.moveTo(0.5 * QPointF(width(), height()) - 0.5 * img.scale() * QPointF(img.width(), img.height()));
+  bounds.translate(-img.position());
+  return bounds;
+}
+
+void ImageArea::reposition(ImageDocument & img)
+{
+  QSizeF wsize = QSizeF(width(), height());
+  QRectF bounds = imageBounds(img);
+
+  QPointF newPos = img.position();
+  if (bounds.width() <= wsize.width()) {
+    newPos.setX(0);
+  } else {
+    if (bounds.left() > 0) {
+      newPos.setX(wsize.width() / 2 - bounds.width() / 2);
+    } else if (bounds.right() < wsize.width()) {
+      newPos.setX(-wsize.width() / 2 + bounds.width() / 2);
+    }
+  }
+  if (bounds.height() <= height()) {
+    newPos.setY(0);
+  } else {
+    if (bounds.top() > 0) {
+      newPos.setY(wsize.height() / 2 - bounds.height() / 2);
+    } else if (bounds.bottom() < wsize.height()) {
+      newPos.setY(-wsize.height() / 2 + bounds.height() / 2);
+    }
+  }
+
+  img.setPosition(newPos);
+}
+
 void ImageArea::mousePressEvent(QMouseEvent * event)
 {
   if (event->button() == Qt::MouseButton::LeftButton) {
@@ -80,14 +116,28 @@ void ImageArea::mouseMoveEvent(QMouseEvent * event)
   if (images_ && event->buttons() & Qt::MouseButton::LeftButton) {
     images_->current()->move(mousePosition_ - event->localPos());
     mousePosition_ = event->localPos();
+    reposition(*images_->current());
   }
 }
 
 void ImageArea::wheelEvent(QWheelEvent * event)
 {
   if (images_) {
-    int step = event->angleDelta().y() > 0 ? 1 : -1;
-    images_->current()->setScaleIndex(images_->current()->scaleIndex() + step);
+    float mul = event->angleDelta().y() > 0 ? 1.25 : 0.8;
+
+    auto & img = *images_->current();
+    auto & bounds = imageBounds(img);
+    if (bounds.contains(event->posF())) {
+      QPointF pos = (event->posF() - bounds.center());
+      QPointF newPos = mul * pos;
+
+      img.move(newPos - pos);
+    }
+
+    float scale = img.scale() * mul;
+    img.setScale(scale);
+
+    reposition(*images_->current());
   }
 }
 
@@ -95,14 +145,20 @@ void ImageArea::hoverMoveEvent(QHoverEvent * event)
 {
   if (images_ && images_->current()) {
     auto & img = *images_->current();
-    QRectF bounds(QPointF(0, 0), QSizeF(img.width() * img.scale(), img.height() * img.scale()));
-    bounds.moveTo(0.5 * QPointF(width(), height()) - 0.5 * img.scale() * QPointF(img.width(), img.height()));
-    bounds.translate(-img.position());
+    auto & bounds = imageBounds(img);
     if (bounds.contains(event->posF())) {
       QPointF positionOnImage = (event->posF() - bounds.topLeft()) / img.scale();
       images_->current()->setCurrentPixel(QPoint(positionOnImage.x(), positionOnImage.y()));
     }
   }
+}
+
+void ImageArea::geometryChanged(const QRectF & newGeometry, const QRectF & oldGeometry)
+{
+  if (images_) {
+    reposition(*images_->current());
+  }
+  QQuickItem::geometryChanged(newGeometry, oldGeometry);
 }
 
 void ImageArea::handleWindowChanged(QQuickWindow * window)

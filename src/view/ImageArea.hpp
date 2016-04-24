@@ -40,12 +40,16 @@ protected:
   void mouseMoveEvent(QMouseEvent * event) override;
   void wheelEvent(QWheelEvent * event) override;
   void hoverMoveEvent(QHoverEvent * event) override;
+  void geometryChanged(const QRectF & newGeometry, const QRectF & oldGeometry) override;
 
 private slots:
   void handleWindowChanged(QQuickWindow * window);
   void connectImages();
 
 private:
+  QRectF imageBounds(ImageDocument const & img) const;
+  void reposition(ImageDocument & img);
+
   QColor color_;
   ImageCollection * images_;
   std::unique_ptr<ImageRenderer> renderer_;
