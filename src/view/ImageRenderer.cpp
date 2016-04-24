@@ -21,7 +21,7 @@ varying highp vec2 coords;
 void main()
 {
   vec4 texel = texture2D(tex, (coords - position) / scale);
-  vec3 color = brightness * pow(texel.xyz, vec3(gamma));
+  vec3 color = pow(brightness * texel.xyz, vec3(gamma));
   gl_FragColor = vec4(color, texel.w);
 })";
 
