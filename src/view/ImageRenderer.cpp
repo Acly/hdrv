@@ -41,7 +41,9 @@ namespace hdrv {
 
 QOpenGLTexture::TextureFormat format(Image const& image)
 {
-  return image.channels() == 3 ? QOpenGLTexture::RGBFormat : QOpenGLTexture::RGBAFormat;
+  return image.format() == Image::Float ?
+    (image.channels() == 3 ? QOpenGLTexture::RGBA32F : QOpenGLTexture::RGBA32F) :
+    (image.channels() == 3 ? QOpenGLTexture::RGBFormat : QOpenGLTexture::RGBAFormat);
 }
 
 QOpenGLTexture::PixelFormat pixelFormat(Image const& image)
