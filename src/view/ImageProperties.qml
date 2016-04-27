@@ -100,6 +100,11 @@ Rectangle {
     anchors.rightMargin: 10
     anchors.bottomMargin: 10
 
+    ExportButton {
+      Layout.columnSpan: 2
+      Layout.fillWidth: true
+    }
+
     Text { text: 'Resolution:' }
     Text { text: images.current.size.width + ' x ' + images.current.size.height }
     Text { text: 'Cursor position:' }

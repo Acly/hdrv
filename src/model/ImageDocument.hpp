@@ -15,10 +15,11 @@ namespace hdrv {
 class ImageDocument : public QObject
 {
   Q_OBJECT
-  Q_PROPERTY(QString name READ name CONSTANT)
-  Q_PROPERTY(QUrl url READ url CONSTANT)
-  Q_PROPERTY(QSize size READ size CONSTANT)
-  Q_PROPERTY(int channels READ channels CONSTANT)
+  Q_PROPERTY(QString name READ name CONSTANT FINAL)
+  Q_PROPERTY(QUrl url READ url CONSTANT FINAL)
+  Q_PROPERTY(QUrl directory READ directory CONSTANT FINAL)
+  Q_PROPERTY(QSize size READ size CONSTANT FINAL)
+  Q_PROPERTY(int channels READ channels CONSTANT FINAL)
   Q_PROPERTY(QPointF position READ position WRITE setPosition NOTIFY positionChanged)
   Q_PROPERTY(float scale READ scale WRITE setScale NOTIFY scaleChanged)
   Q_PROPERTY(qreal brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
@@ -37,12 +38,13 @@ public:
 
   QString const& name() const { return name_; }
   QUrl const& url() const { return url_; }
+  QUrl directory() const;
   QPointF position() const { return position_; }
   int width() const { return image_->width();  }
   int height() const { return image_->height(); }
   QSize size() const { return QSize(image_->width(), image_->height()); }
   int channels() const { return image_->channels(); }
-  float scale() const;
+  float scale() const { return scale_; }
   qreal brightness() const { return brightness_; }
   qreal minBrightness() const { return -10.0; }
   qreal maxBrightness() const { return 10.0; }
@@ -63,6 +65,8 @@ public:
   void setGamma(qreal gamma);
   void setCurrentPixel(QPoint index);
 
+  Q_INVOKABLE bool store(QUrl const& url);
+
 signals:
   void propertyChanged();
   void positionChanged();
@@ -73,6 +77,9 @@ signals:
   void pixelValueChanged();
   
 private:
+  bool check(Result<bool> const&);
+  void setError(QString const& message);
+
   QString name_;
   QUrl url_;
   QPointF position_;

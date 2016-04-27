@@ -28,6 +28,7 @@ SOURCES += src/Main.cpp \
 RESOURCES += hdrv.qrc
 
 OTHER_FILES = src/view/ErrorMessage.qml \
+              src/view/ExportButton.qml \
               src/view/ImageProperties.qml \
               src/view/Main.qml \
               src/view/TabBar.qml
