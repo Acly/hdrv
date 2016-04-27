@@ -99,7 +99,7 @@ Result<Image> Image::loadImage(std::string const& path)
 {
   QImage img;
   if (img.load(path.c_str())) {
-    img = img.convertToFormat(img.hasAlphaChannel() ? QImage::Format_ARGB32 : QImage::Format_RGB888).mirrored();
+    img = img.convertToFormat(img.hasAlphaChannel() ? QImage::Format_RGBA8888 : QImage::Format_RGB888).mirrored();
 
     int w = img.width();
     int h = img.height();

@@ -14,15 +14,22 @@ char const* fragmentSource = R"(
 uniform sampler2D tex;
 uniform vec2 position;
 uniform vec2 scale;
+uniform vec2 regionSize;
 uniform float gamma;
 uniform float brightness;
 varying highp vec2 coords;
 
 void main()
 {
-  vec4 texel = texture2D(tex, (coords - position) / scale);
-  vec3 color = brightness * pow(texel.xyz, vec3(gamma));
-  gl_FragColor = vec4(color, texel.w);
+  vec2 pos = (coords - position) / scale;
+  if(pos.x >= 0.0 && pos.x <= 1.0 && pos.y >= 0.0 && pos.y <= 1.0) {
+    vec3 checker = (int(floor(0.1*coords.x*regionSize.x) + floor(0.1*coords.y*regionSize.y)) & 1) ? vec3(0.4) : vec3(0.6);
+    vec4 texel = texture2D(tex, pos);
+    vec3 color = pow(brightness * texel.xyz, vec3(gamma));
+    gl_FragColor = vec4(lerp(checker, color.xyz, texel.w), 1.0);
+  } else {
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+  }
 })";
 
 float const vertexData[] = {-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
@@ -41,7 +48,9 @@ namespace hdrv {
 
 QOpenGLTexture::TextureFormat format(Image const& image)
 {
-  return image.channels() == 3 ? QOpenGLTexture::RGBFormat : QOpenGLTexture::RGBAFormat;
+  return image.format() == Image::Float ?
+    (image.channels() == 3 ? QOpenGLTexture::RGB32F : QOpenGLTexture::RGBA32F) :
+    (image.channels() == 3 ? QOpenGLTexture::RGBFormat : QOpenGLTexture::RGBAFormat);
 }
 
 QOpenGLTexture::PixelFormat pixelFormat(Image const& image)
@@ -62,7 +71,7 @@ std::unique_ptr<QOpenGLTexture> createTexture(Image const& image)
   texture->allocateStorage(pixelFormat(image), pixelType(image));
   texture->setData(pixelFormat(image), pixelType(image), image.data());
   texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
-  texture->setMagnificationFilter(QOpenGLTexture::Linear);
+  texture->setMagnificationFilter(QOpenGLTexture::Nearest);
   texture->setWrapMode(QOpenGLTexture::ClampToBorder);
   texture->generateMipMaps();
   return texture;
@@ -126,6 +135,7 @@ void ImageRenderer::paint()
   program_->setUniformValue("tex", 0);
   program_->setUniformValue("position", texturePosition(regionSize, imageSize, settings_.position));
   program_->setUniformValue("scale", textureScale(regionSize, imageSize));
+  program_->setUniformValue("regionSize", regionSize);
   program_->setUniformValue("brightness", pow(2.0f, settings_.brightness));
   program_->setUniformValue("gamma", current_->format() == Image::Float ? 1.0f / settings_.gamma : 1.0f);
 

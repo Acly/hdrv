@@ -15,7 +15,7 @@ ImageDocument::ImageDocument(std::shared_ptr<Image> image, QUrl const& url, QObj
   : QObject(parent)
   , name_(url.fileName())
   , url_(url)
-  , scaleIndex_(2)
+  , scale_(1.0f)
   , brightness_(0.0f)
   , gamma_(2.2f)
   , image_(std::move(image))
@@ -25,7 +25,7 @@ ImageDocument::ImageDocument(QObject * parent)
   : ImageDocument(createDefaultImage(), defaultUrl(), parent) 
 {}
 
-float ImageDocument::scale() const { return scaleValues[scaleIndex_]; }
+float ImageDocument::scale() const { return scale_; }
 bool ImageDocument::isDefault() const { return url() == defaultUrl(); }
 
 void ImageDocument::setPosition(QPointF pos)
@@ -40,11 +40,10 @@ void ImageDocument::move(QPointF offset)
   setPosition(position() + offset);
 }
 
-void ImageDocument::setScaleIndex(int index)
+void ImageDocument::setScale(qreal scale)
 {
-  if (scaleIndex_ != index && index >= 0 && index <= maxScaleIndex()) {
-    scaleIndex_ = index;
-    emit scaleIndexChanged();
+  if (!qFuzzyCompare(scale_, scale)) {
+    scale_ = scale;
     emit scaleChanged();
     emit propertyChanged();
   }
