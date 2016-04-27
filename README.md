@@ -1,6 +1,13 @@
 # HDR Viewer
 
-GUI which displays HDR images, no bullshit. Need to come up with a proper name still.
+GUI which displays HDR images, no bullshit.
+
+## Features
+
+* Opens popular HDR image formats: Radiance PIC (_*.pic, *.hdr_), PFM (_*.pfm, *.ppm_), OpenEXR (_*.exr_)
+* Exports images in Radiance PIC or PFM format
+* Fast zoom, pan and brightness control
+* Manage multiple documents in tabs
 
 ## Build
 
@@ -24,6 +31,7 @@ Tested using Visual Studio 2015 Update 1 x64.
 
 When building for a different platform the following dependencies will have to be installed or built from source and provided where the linker can find them:
 * [OpenEXR 2.2.0](http://www.openexr.com/)
+* [zlib 1.2.8](http://www.zlib.net)
 * [libpic 0.1](http://people.cs.kuleuven.be/~ares.lagae/libpic/)
 * [libpfm 0.1](http://people.cs.kuleuven.be/~ares.lagae/libpfm/)
 
@@ -39,5 +47,4 @@ It's a self-explanatory and intuitive GUI. Duh.
 * Show more stats (average / maximum / minimum color)
 * Better tone mapping
 * Better support for existing formats (encodings, layouts)
-* Support for OpenEXR formats
-* Conversion between formats (image export)
+* Image comparison tools
