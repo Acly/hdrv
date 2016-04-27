@@ -45,6 +45,8 @@ bool ImageCollection::load(QUrl const& url)
     return add(url, Image::loadPIC(file.absoluteFilePath().toStdString()));
   } else if (file.suffix() == "pfm" || file.suffix() == "ppm") {
     return add(url, Image::loadPFM(file.absoluteFilePath().toStdString()));
+  } else if (file.suffix() == "exr") {
+    return add(url, Image::loadEXR(file.absoluteFilePath().toStdString()));
   } else {
     return add(url, Image::loadImage(file.absoluteFilePath().toStdString()));
   }

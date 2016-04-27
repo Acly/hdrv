@@ -14,7 +14,7 @@ public:
   operator bool() const { return (bool)value_; }
   T const& value() const& { return value_.get(); }
   T && value() && { return std::move(value_.get()); }
-  std::string const& error() { return error_; }
+  std::string const& error() const { return error_; }
 
   Result(T && v) : value_(std::move(v)) {}
   Result(std::string const& error) : error_(error) {}
@@ -57,9 +57,9 @@ public:
     } 
   }
 
-  void storePFM(std::string const& path);
-  void storePIC(std::string const& path);
-  void storeEXR(std::string const& path);
+  Result<bool> storePFM(std::string const& path) const;
+  Result<bool> storePIC(std::string const& path) const;
+  Result<bool> storeEXR(std::string const& path) const;
 
   Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data);
 

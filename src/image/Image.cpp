@@ -1,8 +1,15 @@
 #include <image/Image.hpp>
 
 #include <fstream>
+
 #include <pfm/pfm_input_file.hpp>
+#include <pfm/pfm_output_file.hpp>
+
 #include <pic/pic_input_file.hpp>
+#include <pic/pic_output_file.hpp>
+
+#include <OpenEXR/ImfRgbaFile.h>
+#include <OpenEXR/ImfArray.h>
 
 #include <QImage>
 
@@ -21,6 +28,8 @@ Image Image::makeEmpty()
   std::vector<uint8_t> data(1, 0);
   return Image(0, 0, 1, Byte, std::move(data));
 }
+
+// PFM
 
 Result<Image> Image::loadPFM(std::string const& path)
 {
@@ -53,6 +62,34 @@ Result<Image> Image::loadPFM(std::string const& path)
     return Result<Image>(std::string("PFM loader: ") + e.what());
   }
 }
+
+Result<bool> Image::storePFM(std::string const& path) const
+{
+  if (format() != Float) {
+    return Result<bool>("Cannot store LDR image as HDR image.");
+  }
+  try {
+    std::ofstream stream(path, std::ios::binary);
+    pfm::pfm_output_file file(stream);
+    file.write_header(pfm::color_format, width(), height(), pfm::host_byte_order, 1.0);
+
+    std::unique_ptr<pfm::color_pixel[]> scanline(new pfm::color_pixel[width()]);
+    for (int y = 0; y < height(); ++y) {
+      for (int x = 0; x < width(); ++x) {
+        scanline[x][0] = value<float>(x, y, 0);
+        scanline[x][1] = value<float>(x, y, 1);
+        scanline[x][2] = value<float>(x, y, 2);
+      }
+      file.write_color_scanline(scanline.get(), width());
+    }
+    return Result<bool>(true);
+
+  } catch (std::exception const& e) {
+    return Result<bool>(std::string("PFM export failed: ") + e.what());
+  }
+}
+
+// Radiance PIC
 
 Result<Image> Image::loadPIC(std::string const& path)
 {
@@ -94,6 +131,69 @@ Result<Image> Image::loadPIC(std::string const& path)
     return Result<Image>(std::string("Radiance PIC loader: ") + e.what());
   }
 }
+
+Result<bool> Image::storePIC(std::string const& path) const
+{
+  if (format() != Float) {
+    return Result<bool>("Cannot store LDR image as HDR image.");
+  }
+  try {
+    std::ofstream stream(path, std::ios::binary);
+    pic::pic_output_file file(stream);
+
+    file.write_information_header(pic::_32_bit_rle_rgbe, 1.0);
+    file.write_resolution_string(pic::neg_y_pos_x, width(), height());
+
+    std::unique_ptr<pic::pixel[]> scanline(new pic::pixel[width()]);
+    for (int y = height() - 1; y >= 0; --y) {
+      for (int x = 0; x < width(); ++x) {
+        pic::rgb_to_rgbe(value<float>(x, y, 0), value<float>(x, y, 1), value<float>(x, y, 2),
+          scanline[x][0], scanline[x][1], scanline[x][2], scanline[x][3]);
+      }
+      file.write_scanline(scanline.get(), width());
+    }
+    return Result<bool>(true);
+
+  } catch (std::exception const& e) {
+    return Result<bool>(std::string("Radiance PIC export failed: ") + e.what());
+  }
+}
+
+// ILM OpenEXR
+
+Result<Image> Image::loadEXR(std::string const& path)
+{
+  try {
+    Imf::RgbaInputFile file(path.c_str());
+    auto dw = file.dataWindow();
+    int w = dw.max.x - dw.min.x + 1;
+    int h = dw.max.y - dw.min.y + 1;
+    int c = 4;
+
+    std::vector<uint8_t> data(w * h * c * sizeof(float));
+    float * d = reinterpret_cast<float *>(data.data());
+
+    Imf::Array2D<Imf::Rgba> pixels(1, w);
+    for (int y = 0; y < h; ++y, ++dw.min.y) {
+      file.setFrameBuffer(&pixels[0][0] - dw.min.x - dw.min.y * w, 1, w);
+      file.readPixels(dw.min.y);
+      for (int x = 0; x < w; ++x) {
+        auto const& p = pixels[0][x];
+        int index = (h - y - 1) * w * c + x * c; // flip horizontally
+        d[index + 0] = (float)p.r;
+        d[index + 1] = (float)p.g;
+        d[index + 2] = (float)p.b;
+        d[index + 3] = (float)p.a;
+      }
+    }
+    return Result<Image>(Image(w, h, c, Float, std::move(data)));
+
+  } catch (std::exception const& e) {
+    return Result<Image>(std::string("OpenEXR loader: ") + e.what());
+  }
+}
+
+// Qt LDR Image
 
 Result<Image> Image::loadImage(std::string const& path)
 {

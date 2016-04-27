@@ -61,9 +61,9 @@ inline void pic::rgb_or_xyz_to_rgbe_or_xyze(FloatType rgb_r_or_xyz_x, FloatType 
   else {
     int e;
     d = frexp(d, &e) * FloatType(255.9999) / d;
-    rgbe_r_or_xyze_x = rgb_r_or_xyz_x > FloatType(0.0) ? rgb_r_or_xyz_x * d : 0;
-    rgbe_g_or_xyze_y = rgb_g_or_xyz_y > FloatType(0.0) ? rgb_g_or_xyz_y * d : 0;
-    rgbe_b_or_xyze_z = rgb_b_or_xyz_z > FloatType(0.0) ? rgb_b_or_xyz_z * d : 0;
+    rgbe_r_or_xyze_x = rgb_r_or_xyz_x > FloatType(0.0) ? (uint8_t)(rgb_r_or_xyz_x * d) : 0;
+    rgbe_g_or_xyze_y = rgb_g_or_xyz_y > FloatType(0.0) ? (uint8_t)(rgb_g_or_xyz_y * d) : 0;
+    rgbe_b_or_xyze_z = rgb_b_or_xyz_z > FloatType(0.0) ? (uint8_t)(rgb_b_or_xyz_z * d) : 0;
     rgbe_e_or_xyze_e = e + 128;
   }
 }

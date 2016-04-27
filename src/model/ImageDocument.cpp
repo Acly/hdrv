@@ -1,5 +1,10 @@
 #include <model/ImageDocument.hpp>
 
+#include <QDir>
+#include <QFileInfo>
+
+#include <model/ImageCollection.hpp>
+
 namespace hdrv {
 
 float const scaleValues[] = { 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
@@ -25,7 +30,11 @@ ImageDocument::ImageDocument(QObject * parent)
   : ImageDocument(createDefaultImage(), defaultUrl(), parent) 
 {}
 
-float ImageDocument::scale() const { return scale_; }
+QUrl ImageDocument::directory() const
+{
+  return QUrl::fromLocalFile(QFileInfo(url().toLocalFile()).absolutePath());
+}
+
 bool ImageDocument::isDefault() const { return url() == defaultUrl(); }
 
 void ImageDocument::setPosition(QPointF pos)
@@ -76,6 +85,18 @@ void ImageDocument::setCurrentPixel(QPoint index)
   }
 }
 
+bool ImageDocument::store(QUrl const& url)
+{
+  QFileInfo file(url.toLocalFile());
+  if (file.suffix() == "hdr" || file.suffix() == "pic") {
+    return check(image()->storePIC(file.absoluteFilePath().toStdString()));
+  } else if (file.suffix() == "pfm" || file.suffix() == "ppm") {
+    return check(image()->storePFM(file.absoluteFilePath().toStdString()));
+  }
+  setError("Unsupported file extension: " + file.suffix());
+  return false;
+}
+
 QVector4D ImageDocument::pixelValue() const
 {
   QVector4D texel;
@@ -83,13 +104,27 @@ QVector4D ImageDocument::pixelValue() const
   if (channels() > 1) {
     texel.setY(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 1));
     if (channels() > 2) {
-      texel.setZ(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 3));
+      texel.setZ(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 2));
       if (channels() > 3) {
-        texel.setW(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 4));
+        texel.setW(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 3));
       }
     }
   }
   return texel;
+}
+
+bool ImageDocument::check(Result<bool> const& result)
+{
+  if (!result) {
+    setError(QString::fromStdString(result.error()));
+  }
+  return (bool)result;
+}
+
+void ImageDocument::setError(QString const& message)
+{
+  auto & collection = *static_cast<ImageCollection *>(parent());
+  collection.setError(message);
 }
 
 }
