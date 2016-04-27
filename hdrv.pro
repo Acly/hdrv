@@ -6,8 +6,10 @@ CONFIG += qt
 INCLUDEPATH += src dependencies/include \
                $$BOOST_ROOT
 
-win32:Debug:LIBS += -L$$PWD/dependencies/lib_win64_vc14_debug -lpic -lpfm
-win32:Release:LIBS += -L$$PWD/dependencies/lib_win64_vc14_release -lpic -lpfm
+win32:Debug:LIBS += -L$$PWD/dependencies/lib_win64_vc14_debug \
+                    -lpic -lpfm -lHalf -lIlmImf-2_2 -lIex-2_2 -lIlmThread-2_2 -lzlibstaticd
+win32:Release:LIBS += -L$$PWD/dependencies/lib_win64_vc14_release \
+                      -lpic -lpfm -lHalf -lIlmImf-2_2 -lIex-2_2 -lIlmThread-2_2 -lzlibstatic
 win32:RC_FILE = media/hdrv.rc
 
 HEADERS += src/image/Image.hpp \

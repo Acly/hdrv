@@ -3,6 +3,8 @@
 #include <fstream>
 #include <pfm/pfm_input_file.hpp>
 #include <pic/pic_input_file.hpp>
+#include <OpenEXR/ImfRgbaFile.h>
+#include <OpenEXR/ImfArray.h>
 
 #include <QImage>
 
@@ -92,6 +94,38 @@ Result<Image> Image::loadPIC(std::string const& path)
 
   } catch (std::exception const& e) {
     return Result<Image>(std::string("Radiance PIC loader: ") + e.what());
+  }
+}
+
+Result<Image> Image::loadEXR(std::string const& path)
+{
+  try {
+    Imf::RgbaInputFile file(path.c_str());
+    auto dw = file.dataWindow();
+    int w = dw.max.x - dw.min.x + 1;
+    int h = dw.max.y - dw.min.y + 1;
+    int c = 4;
+
+    std::vector<uint8_t> data(w * h * c * sizeof(float));
+    float * d = reinterpret_cast<float *>(data.data());
+
+    Imf::Array2D<Imf::Rgba> pixels(1, w);
+    for (int y = 0; y < h; ++y, ++dw.min.y) {
+      file.setFrameBuffer(&pixels[0][0] - dw.min.x - dw.min.y * w, 1, w);
+      file.readPixels(dw.min.y);
+      for (int x = 0; x < w; ++x) {
+        auto const& p = pixels[0][x];
+        int index = (h - y - 1) * w * c + x * c; // flip horizontally
+        d[index + 0] = (float)p.r;
+        d[index + 1] = (float)p.g;
+        d[index + 2] = (float)p.b;
+        d[index + 3] = (float)p.a;
+      }
+    }
+    return Result<Image>(Image(w, h, c, Float, std::move(data)));
+
+  } catch (std::exception const& e) {
+    return Result<Image>(std::string("OpenEXR loader: ") + e.what());
   }
 }
 
