@@ -83,9 +83,9 @@ QVector4D ImageDocument::pixelValue() const
   if (channels() > 1) {
     texel.setY(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 1));
     if (channels() > 2) {
-      texel.setZ(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 3));
+      texel.setZ(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 2));
       if (channels() > 3) {
-        texel.setW(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 4));
+        texel.setW(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 3));
       }
     }
   }
