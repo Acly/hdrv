@@ -1,6 +1,8 @@
 #include <view/ImageRenderer.hpp>
 
 char const* vertexSource = R"(
+#version 330
+
 attribute highp vec2 vertices;
 varying highp vec2 coords;
 
@@ -11,6 +13,8 @@ void main()
 })";
 
 char const* fragmentSource = R"(
+#version 330
+
 uniform sampler2D tex;
 uniform vec2 position;
 uniform vec2 scale;
@@ -23,10 +27,10 @@ void main()
 {
   vec2 pos = (coords - position) / scale;
   if(pos.x >= 0.0 && pos.x <= 1.0 && pos.y >= 0.0 && pos.y <= 1.0) {
-    vec3 checker = (int(floor(0.1*coords.x*regionSize.x) + floor(0.1*coords.y*regionSize.y)) & 1) ? vec3(0.4) : vec3(0.6);
+    vec3 checker = (int(floor(0.1*coords.x*regionSize.x) + floor(0.1*coords.y*regionSize.y)) & 1) > 0 ? vec3(0.4) : vec3(0.6);
     vec4 texel = texture2D(tex, pos);
     vec3 color = pow(brightness * texel.xyz, vec3(gamma));
-    gl_FragColor = vec4(lerp(checker, color.xyz, texel.w), 1.0);
+    gl_FragColor = vec4(mix(checker, color.xyz, texel.w), 1.0);
   } else {
     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
   }
