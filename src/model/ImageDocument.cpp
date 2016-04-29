@@ -26,6 +26,13 @@ ImageDocument::ImageDocument(std::shared_ptr<Image> image, QUrl const& url, QObj
   , image_(std::move(image))
 {}
 
+ImageDocument::ImageDocument(std::shared_ptr<Image> base, std::shared_ptr<Image> comparison,
+  QUrl const& url, QObject * parent)
+  : ImageDocument(std::move(base), url, parent)
+{
+  comparison_ = ImageComparison{ comparison };
+}
+
 ImageDocument::ImageDocument(QObject * parent) 
   : ImageDocument(createDefaultImage(), defaultUrl(), parent) 
 {}

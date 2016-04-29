@@ -42,6 +42,7 @@ public:
   bool add(QUrl const& url, Result<Image> && image);
   Q_INVOKABLE bool load(QUrl const& url);
   Q_INVOKABLE void remove(int index);
+  Q_INVOKABLE void compare(int index);
 
   ImageDocument * current() const { return items_.at(currentIndex_); }
   int currentIndex() const { return currentIndex_; }

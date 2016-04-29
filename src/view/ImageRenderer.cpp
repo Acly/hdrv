@@ -16,11 +16,15 @@ char const* fragmentSource = R"(
 #version 330
 
 uniform sampler2D tex;
+uniform sampler2D comparison;
+
 uniform vec2 position;
 uniform vec2 scale;
 uniform vec2 regionSize;
 uniform float gamma;
 uniform float brightness;
+uniform int mode;
+
 varying highp vec2 coords;
 
 void main()
@@ -29,6 +33,12 @@ void main()
   if(pos.x >= 0.0 && pos.x <= 1.0 && pos.y >= 0.0 && pos.y <= 1.0) {
     vec3 checker = (int(floor(0.1*coords.x*regionSize.x) + floor(0.1*coords.y*regionSize.y)) & 1) > 0 ? vec3(0.4) : vec3(0.6);
     vec4 texel = texture2D(tex, pos);
+
+    if (mode == 1) { // difference
+      vec4 comp = texture2D(comparison, pos);
+      texel = vec4(abs(comp - texel).xyz, 1.0);
+    }
+
     vec3 color = pow(brightness * texel.xyz, vec3(gamma));
     gl_FragColor = vec4(mix(checker, color.xyz, texel.w), 1.0);
   } else {
@@ -92,16 +102,14 @@ QVector2D textureScale(QVector2D regionSize, QVector2D imageSize)
   return imageSize / regionSize;
 }
 
-void ImageRenderer::setCurrent(std::shared_ptr<Image> const& image)
-{
-  current_ = image;
-}
-
 void ImageRenderer::updateImages(std::vector<ImageDocument *> const& images)
 {
   // Erase textures for images that no longer exist
   for (auto iter = textures_.begin(); iter != textures_.end(); ) {
-    auto matchImage = [iter](ImageDocument * doc) { return doc->image() == iter->first; };
+    auto matchImage = [iter](ImageDocument * doc) {
+      return doc->image() == iter->first
+        || (doc->comparison() && doc->comparison()->image == iter->first);
+    };
     if (std::find_if(images.begin(), images.end(), matchImage) == images.end()) {
       textures_.erase(iter++);
     } else {
@@ -109,10 +117,16 @@ void ImageRenderer::updateImages(std::vector<ImageDocument *> const& images)
     }
   }
   // Create textures for new images
-  for (auto doc : images) {
-    auto & tex = textures_[doc->image()];
+  auto createTextureFor = [this](std::shared_ptr<Image> const& image) {
+    auto & tex = textures_[image];
     if (!tex) {
-      tex = createTexture(*doc->image());
+      tex = createTexture(*image);
+    }
+  };
+  for (auto doc : images) {
+    createTextureFor(doc->image());
+    if (auto const& c = doc->comparison()) {
+      createTextureFor(c->image);
     }
   }
 }
@@ -142,6 +156,13 @@ void ImageRenderer::paint()
   program_->setUniformValue("regionSize", regionSize);
   program_->setUniformValue("brightness", pow(2.0f, settings_.brightness));
   program_->setUniformValue("gamma", current_->format() == Image::Float ? 1.0f / settings_.gamma : 1.0f);
+  if (comparison_) {
+    textures_[comparison_->image]->bind(1);
+    program_->setUniformValue("comparison", 1);
+    program_->setUniformValue("mode", 1);
+  } else {
+    program_->setUniformValue("mode", 0);
+  }
 
   glViewport(region.offset.x(), region.offset.y(), region.size.width(), region.size.height());
 

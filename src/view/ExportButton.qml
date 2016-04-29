@@ -14,6 +14,21 @@ Rectangle {
     GradientStop { position: 1 ; color: exportButton.pressed ? '#ccc' : '#ddd' }
   }
 
+  property bool exportable: images.current.isFloat && !images.current.isComparison
+
+  property Component subButtonStyle: Component {
+    ButtonStyle {
+      background: Rectangle {
+        implicitWidth: 45
+        border.color: control.pressed ? '#888' : 'transparent'
+        gradient: Gradient {
+          GradientStop { position: 0; color: control.pressed ? '#ddd' : 'transparent' }
+          GradientStop { position: 1; color: control.pressed ? '#ccc' : 'transparent' }
+        }
+      }
+    }
+  }
+
   RowLayout {
     anchors.fill: parent
     spacing: 0
@@ -22,7 +37,7 @@ Rectangle {
       id: exportButton
       text: 'Export'
       Layout.fillWidth: true
-      enabled: images.current.isFloat
+      enabled: exportable
       onClicked: storeImageDialog.open()
       style: ButtonStyle {
         background: Rectangle { color: 'transparent' }
@@ -38,21 +53,12 @@ Rectangle {
     Button {
       id: exportHDRButton
       text: 'HDR'
-      enabled: images.current.isFloat
+      enabled: exportable
       onClicked: {
         storeImageDialog.selectedNameFilter = 'Radiance HDR (*.hdr)'
         storeImageDialog.open()
       }
-      style: ButtonStyle {
-        background: Rectangle {
-          implicitWidth: 45
-          border.color: control.pressed ? '#888' : 'transparent'
-          gradient: Gradient {
-            GradientStop { position: 0; color: control.pressed ? '#ddd' : 'transparent' }
-            GradientStop { position: 1; color: control.pressed ? '#ccc' : 'transparent' }
-          }
-        }
-      }
+      style: subButtonStyle
     }
 
     Rectangle {
@@ -64,21 +70,12 @@ Rectangle {
     Button {
       id: exportPFMButton
       text: 'PFM'
-      enabled: images.current.isFloat
+      enabled: exportable
       onClicked: {
         storeImageDialog.selectedNameFilter = 'PFM image (*.pfm)'
         storeImageDialog.open()
       }
-      style: ButtonStyle {
-        background: Rectangle {
-          implicitWidth: 45
-          border.color: control.pressed ? '#888' : 'transparent'
-          gradient: Gradient {
-            GradientStop { position: 0; color: control.pressed ? '#ddd' : 'transparent' }
-            GradientStop { position: 1; color: control.pressed ? '#ccc' : 'transparent' }
-          }
-        }
-      }
+      style: subButtonStyle
     }
 
     FileDialog {

@@ -12,6 +12,11 @@
 
 namespace hdrv {
 
+struct ImageComparison
+{
+  std::shared_ptr<Image> image;
+};
+
 class ImageDocument : public QObject
 {
   Q_OBJECT
@@ -31,9 +36,12 @@ class ImageDocument : public QObject
   Q_PROPERTY(bool isFloat READ isFloat CONSTANT FINAL)
   Q_PROPERTY(QPoint pixelPosition READ pixelPosition NOTIFY pixelPositionChanged)
   Q_PROPERTY(QVector4D pixelValue READ pixelValue NOTIFY pixelValueChanged)
+  Q_PROPERTY(bool isComparison READ isComparison CONSTANT FINAL)
 
 public:
   ImageDocument(std::shared_ptr<Image> image, QUrl const& url, QObject * parent = nullptr);
+  ImageDocument(std::shared_ptr<Image> base, std::shared_ptr<Image> comparison,
+    QUrl const& url, QObject * parent = nullptr);
   ImageDocument(QObject * parent = nullptr);
 
   QString const& name() const { return name_; }
@@ -57,6 +65,8 @@ public:
   QPoint pixelPosition() const { return pixelPosition_; }
   QVector4D pixelValue() const;
   bool isDefault() const;
+  bool isComparison() const { return (bool)comparison_; }
+  boost::optional<ImageComparison> const& comparison() const { return comparison_; }
 
   void setPosition(QPointF pos);
   void move(QPointF offset);
@@ -75,8 +85,9 @@ signals:
   void gammaChanged();
   void pixelPositionChanged();
   void pixelValueChanged();
-  
+
 private:
+
   bool check(Result<bool> const&);
   void setError(QString const& message);
 
@@ -89,6 +100,7 @@ private:
   QPoint pixelPosition_;
   QVector4D pixelValue_;
   std::shared_ptr<Image> image_;
+  boost::optional<ImageComparison> comparison_;
 };
 
 Q_DECLARE_METATYPE(ImageDocument*);

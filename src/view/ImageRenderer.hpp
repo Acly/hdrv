@@ -36,7 +36,8 @@ public:
   void setRenderRegion(RenderRegion region) { renderRegion_ = region; }
   void setClearColor(QColor color) { clearColor_ = color; }
   void setSettings(ImageSettings settings) { settings_ = settings; }
-  void setCurrent(std::shared_ptr<Image> const& image);
+  void setCurrent(std::shared_ptr<Image> const& image) { current_ = image; }
+  void setComparison(boost::optional<ImageComparison> const& c) { comparison_ = c; }
   void updateImages(std::vector<ImageDocument *> const& images);
 
 public slots:
@@ -48,6 +49,7 @@ private:
   ImageSettings settings_;
   ImageTextures textures_;
   std::shared_ptr<Image> current_;
+  boost::optional<ImageComparison> comparison_;
   std::unique_ptr<QOpenGLShaderProgram> program_;
 };
 

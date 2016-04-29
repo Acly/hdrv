@@ -57,6 +57,7 @@ void ImageArea::sync()
     renderer_->updateImages(images_->vector());
     renderer_->setCurrent(img.image());
     renderer_->setSettings({ QVector2D(img.position()), img.scale(), (float)img.brightness(), (float)img.gamma() });
+    renderer_->setComparison(img.comparison());
   }
 }
 

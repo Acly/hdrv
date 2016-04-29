@@ -65,6 +65,14 @@ void ImageCollection::remove(int index)
   item->deleteLater();
 }
 
+void ImageCollection::compare(int index)
+{
+  auto & currentImage = current()->image();
+  auto & comparisonImage = items_[index]->image();
+  auto url = QUrl("file:////" + current()->name() + "-" + items_[index]->name());
+  add(new ImageDocument(currentImage, comparisonImage, url, this));
+}
+
 void ImageCollection::setCurrentIndex(int i)
 {
   if (currentIndex_ != i) {

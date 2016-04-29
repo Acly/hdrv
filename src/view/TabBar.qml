@@ -4,6 +4,7 @@ import QtQuick.Controls.Styles 1.4
 import Qt.labs.folderlistmodel 1.0
 import Qt.labs.settings 1.0
 import QtQuick.Dialogs 1.2
+import QtQuick.Layouts 1.2
 import Hdrv 1.0
 
 ListView {
@@ -24,7 +25,7 @@ ListView {
     Item {
       id: imageTabItem
       height: 24
-      width: imageTabText.width + 32
+      width: imageTabText.width + 50
 
       Rectangle {
         anchors.left: parent.left
@@ -44,37 +45,67 @@ ListView {
           text: name;
         }
 
-        Button {
-          id: closeImageButton
+        RowLayout {
+          id: buttonArea
           anchors.verticalCenter: parent.verticalCenter
           anchors.right: parent.right
           anchors.rightMargin: 3
-          width: 14
-          height: 14
-          text: 'x'
-          style: ButtonStyle {
-            background: Rectangle {
-              implicitWidth: 14
-              implicitHeight: 14
-              radius: 7
-              color: control.hovered ? '#F00000' : 'transparent'
-            }
-            label: Item {
-              implicitWidth: buttonText.implicitWidth
-              implicitHeight: buttonText.implicitHeight
-              baselineOffset: buttonText.y + buttonText.baselineOffset
-              Text {
-                id: buttonText
-                color: control.hovered ? 'white' : 'black'
-                anchors.centerIn: parent
-                text: control.text
+          spacing: 0
+
+          Button {
+            id: compareImageButton
+            visible: !isComparison && !images.current.isComparison && images.current.name != name
+            text: 'c'
+            style: ButtonStyle {
+              background: Rectangle {
+                implicitWidth: 8
+                implicitHeight: 8
+                radius: 8
+                color: control.hovered ? '#0080F0' : 'transparent'
+              }
+              label: Item {
+                implicitWidth: 8
+                implicitHeight: 8
+                baselineOffset: buttonText.y + buttonText.baselineOffset
+                Text {
+                  id: buttonText
+                  color: control.hovered ? 'white' : 'black'
+                  anchors.centerIn: parent
+                  text: control.text
+                }
               }
             }
+            onClicked: images.compare(index)
           }
-          onClicked: {
-            if (images.items.length > 1) images.remove(index);
-            else Qt.quit();
+
+          Button {
+            id: closeImageButton
+            text: 'x'
+            style: ButtonStyle {
+              background: Rectangle {
+                implicitWidth: 8
+                implicitHeight: 8
+                radius: 8
+                color: control.hovered ? '#F00000' : 'transparent'
+              }
+              label: Item {
+                implicitWidth: 8
+                implicitHeight: 8
+                baselineOffset: buttonText.y + buttonText.baselineOffset
+                Text {
+                  id: buttonText
+                  color: control.hovered ? 'white' : 'black'
+                  anchors.centerIn: parent
+                  text: control.text
+                }
+              }
+            }
+            onClicked: {
+              if (images.items.length > 1) images.remove(index);
+              else Qt.quit();
+            }
           }
+        
         }
 
         Shortcut {
@@ -86,7 +117,7 @@ ListView {
 
         MouseArea {
           anchors.left: parent.left
-          anchors.right: closeImageButton.left
+          anchors.right: buttonArea.left
           anchors.top: parent.top
           anchors.bottom: parent.bottom
           onClicked: images.currentIndex = index
