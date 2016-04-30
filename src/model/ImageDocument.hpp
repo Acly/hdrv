@@ -23,6 +23,7 @@ class ImageDocument : public QObject
   Q_PROPERTY(QString name READ name CONSTANT FINAL)
   Q_PROPERTY(QUrl url READ url CONSTANT FINAL)
   Q_PROPERTY(QUrl directory READ directory CONSTANT FINAL)
+  Q_PROPERTY(QString fileType READ fileType CONSTANT FINAL)
   Q_PROPERTY(QSize size READ size CONSTANT FINAL)
   Q_PROPERTY(int channels READ channels CONSTANT FINAL)
   Q_PROPERTY(QPointF position READ position WRITE setPosition NOTIFY positionChanged)
@@ -47,6 +48,7 @@ public:
   QString const& name() const { return name_; }
   QUrl const& url() const { return url_; }
   QUrl directory() const;
+  QString fileType() const;
   QPointF position() const { return position_; }
   int width() const { return image_->width();  }
   int height() const { return image_->height(); }

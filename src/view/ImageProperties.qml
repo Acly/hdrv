@@ -6,6 +6,15 @@ import Hdrv 1.0
 Rectangle {
   color: '#FAFAFA'
 
+  function presentFloat(num, maxDecimals) {
+    var str = num.toString();
+    var i = str.indexOf('.');
+    if (i != -1) {
+      str = str.substr(0, Math.min(str.length, i + maxDecimals + 1));
+    }
+    return str;
+  }
+
   GridLayout {
     columns: 3
     columnSpacing: 5
@@ -29,7 +38,7 @@ Rectangle {
         bottom: 0.01
       }
       focus: true
-      text: Math.round(images.current.scale * 10000.0) / 10000.0
+      text: presentFloat(images.current.scale, 4)
       onEditingFinished: images.current.scale = scaleText.text
       Text {
         text: 'x'
@@ -90,7 +99,7 @@ Rectangle {
     }
 
   }
-  
+
   function vectorGet(vec, i) {
     return i == 0 ? vec.x : (i == 1 ? vec.y : (i == 2 ? vec.z : vec.w));
   }

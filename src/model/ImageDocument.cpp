@@ -18,7 +18,7 @@ QUrl defaultUrl() { return QUrl("file:////HDRV"); }
 
 ImageDocument::ImageDocument(std::shared_ptr<Image> image, QUrl const& url, QObject * parent)
   : QObject(parent)
-  , name_(url.fileName())
+  , name_(QFileInfo(url.fileName()).baseName())
   , url_(url)
   , scale_(1.0f)
   , brightness_(0.0f)
@@ -40,6 +40,26 @@ ImageDocument::ImageDocument(QObject * parent)
 QUrl ImageDocument::directory() const
 {
   return QUrl::fromLocalFile(QFileInfo(url().toLocalFile()).absolutePath());
+}
+
+QString ImageDocument::fileType() const
+{
+  if (isDefault()) {
+    return "Default";
+  } else if (isComparison()) {
+    return "Comparison";
+  } else if (isFloat()) {
+    auto ext = QFileInfo(url().fileName()).suffix();
+    if (ext == "exr") {
+      return "FormatEXR";
+    } else if (ext == "pfm" || ext == "ppm") {
+      return "FormatPFM";
+    } else {
+      return "FormatHDR";
+    }
+  } else { // not float
+    return "FormatByte";
+  }
 }
 
 bool ImageDocument::isDefault() const { return url() == defaultUrl(); }

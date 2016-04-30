@@ -124,7 +124,7 @@ void ImageArea::mouseMoveEvent(QMouseEvent * event)
 void ImageArea::wheelEvent(QWheelEvent * event)
 {
   if (images_) {
-    float mul = event->angleDelta().y() > 0 ? 1.25 : 0.8;
+    float mul = event->angleDelta().y() > 0 ? 2.0 : 0.5;
 
     auto & img = *images_->current();
     auto & bounds = imageBounds(img);

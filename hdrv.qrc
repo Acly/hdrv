@@ -8,5 +8,15 @@
     <file>media/Open.png</file>
     <file>media/Save.png</file>
     <file>media/Properties.png</file>
+    <file>media/Close.png</file>
+    <file>media/CloseActive.png</file>
+    <file>media/Compare.png</file>
+    <file>media/CompareActive.png</file>
+    <file>media/FormatHDR.png</file>
+    <file>media/FormatPFM.png</file>
+    <file>media/FormatEXR.png</file>
+    <file>media/FormatByte.png</file>
+    <file>media/Comparison.png</file>
+    <file>media/Default.png</file>
   </qresource>
 </RCC>

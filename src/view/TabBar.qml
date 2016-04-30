@@ -25,7 +25,7 @@ ListView {
     Item {
       id: imageTabItem
       height: 24
-      width: imageTabText.width + 50
+      width: imageTabText.width + 77
 
       Rectangle {
         anchors.left: parent.left
@@ -36,12 +36,21 @@ ListView {
         color: imageTabItem.ListView.isCurrentItem ? activeColor : inactiveColor
         height: parent.height - 4
 
-        Text {
-          id: imageTabText
+        Image {
+          id: imageTabIcon
           anchors.left: parent.left
           anchors.top: parent.top
+          anchors.leftMargin: 3
+          anchors.topMargin: 1
+          source: 'qrc:/hdrv/media/' + fileType + '.png'
+        }
+
+        Text {
+          id: imageTabText
+          anchors.left: imageTabIcon.right
+          anchors.top: parent.top
           anchors.leftMargin: 4
-          anchors.topMargin: 4
+          anchors.topMargin: 3
           text: name;
         }
 
@@ -54,24 +63,18 @@ ListView {
 
           Button {
             id: compareImageButton
-            visible: !isComparison && !images.current.isComparison && images.current.name != name
-            text: 'c'
+            visible: !isComparison && !images.current.isComparison && images.current.url != url
+            Layout.alignment: Qt.AlignVCenter
             style: ButtonStyle {
               background: Rectangle {
-                implicitWidth: 8
-                implicitHeight: 8
-                radius: 8
+                implicitWidth: 13
+                implicitHeight: 13
+                radius: 6
                 color: control.hovered ? '#0080F0' : 'transparent'
-              }
-              label: Item {
-                implicitWidth: 8
-                implicitHeight: 8
-                baselineOffset: buttonText.y + buttonText.baselineOffset
-                Text {
-                  id: buttonText
-                  color: control.hovered ? 'white' : 'black'
-                  anchors.centerIn: parent
-                  text: control.text
+                Image {
+                  anchors.fill: parent
+                  anchors.margins: 2
+                  source: control.hovered ? 'qrc:/hdrv/media/CompareActive.png' : 'qrc:/hdrv/media/Compare.png'
                 }
               }
             }
@@ -80,23 +83,17 @@ ListView {
 
           Button {
             id: closeImageButton
-            text: 'x'
+            Layout.alignment: Qt.AlignVCenter
             style: ButtonStyle {
               background: Rectangle {
-                implicitWidth: 8
-                implicitHeight: 8
-                radius: 8
+                implicitWidth: 13
+                implicitHeight: 13
+                radius: 6
                 color: control.hovered ? '#F00000' : 'transparent'
-              }
-              label: Item {
-                implicitWidth: 8
-                implicitHeight: 8
-                baselineOffset: buttonText.y + buttonText.baselineOffset
-                Text {
-                  id: buttonText
-                  color: control.hovered ? 'white' : 'black'
-                  anchors.centerIn: parent
-                  text: control.text
+                Image {
+                  anchors.fill: parent
+                  anchors.margins: 2
+                  source: control.hovered ? 'qrc:/hdrv/media/CloseActive.png' : 'qrc:/hdrv/media/Close.png'
                 }
               }
             }
@@ -105,7 +102,7 @@ ListView {
               else Qt.quit();
             }
           }
-        
+
         }
 
         Shortcut {
