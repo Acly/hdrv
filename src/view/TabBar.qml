@@ -41,7 +41,7 @@ ListView {
           anchors.left: parent.left
           anchors.top: parent.top
           anchors.leftMargin: 3
-          anchors.topMargin: 1
+          anchors.topMargin: 2
           source: 'qrc:/hdrv/media/' + fileType + '.png'
         }
 

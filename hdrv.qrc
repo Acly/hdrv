@@ -5,6 +5,8 @@
     <file>src/view/Main.qml</file>
     <file>src/view/TabBar.qml</file>
     <file>src/view/ImageProperties.qml</file>
+    <file>src/shader/RenderImage.vert</file>
+    <file>src/shader/RenderImage.frag</file>
     <file>media/Open.png</file>
     <file>media/Save.png</file>
     <file>media/Properties.png</file>

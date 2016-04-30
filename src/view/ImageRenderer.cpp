@@ -1,58 +1,26 @@
 #include <view/ImageRenderer.hpp>
 
-char const* vertexSource = R"(
-#version 330
-
-attribute highp vec2 vertices;
-varying highp vec2 coords;
-
-void main()
-{
-  gl_Position = vec4(vertices, 0, 1);
-  coords = vertices * 0.5 + 0.5;
-})";
-
-char const* fragmentSource = R"(
-#version 330
-
-uniform sampler2D tex;
-uniform sampler2D comparison;
-
-uniform vec2 position;
-uniform vec2 scale;
-uniform vec2 regionSize;
-uniform float gamma;
-uniform float brightness;
-uniform int mode;
-
-varying highp vec2 coords;
-
-void main()
-{
-  vec2 pos = (coords - position) / scale;
-  if(pos.x >= 0.0 && pos.x <= 1.0 && pos.y >= 0.0 && pos.y <= 1.0) {
-    vec3 checker = (int(floor(0.1*coords.x*regionSize.x) + floor(0.1*coords.y*regionSize.y)) & 1) > 0 ? vec3(0.4) : vec3(0.6);
-    vec4 texel = texture2D(tex, pos);
-
-    if (mode == 1) { // difference
-      vec4 comp = texture2D(comparison, pos);
-      texel = vec4(abs(comp - texel).xyz, 1.0);
-    }
-
-    vec3 color = pow(brightness * texel.xyz, vec3(gamma));
-    gl_FragColor = vec4(mix(checker, color.xyz, texel.w), 1.0);
-  } else {
-    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-  }
-})";
+#include <QFile>
+#include <QTextStream>
 
 float const vertexData[] = {-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
+
+QString readFile(QString const& name)
+{
+  QFile file(name);
+  if (!file.open(QFile::ReadOnly | QFile::Text)) {
+    qCritical() << "Cannot read shader source: " << name;
+    return "";
+  }
+  QTextStream stream(&file);
+  return stream.readAll();
+}
 
 std::unique_ptr<QOpenGLShaderProgram> createProgram()
 {
   auto program = std::make_unique<QOpenGLShaderProgram>();
-  program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexSource);
-  program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentSource);
+  program->addShaderFromSourceCode(QOpenGLShader::Vertex, readFile(":/hdrv/src/shader/RenderImage.vert"));
+  program->addShaderFromSourceCode(QOpenGLShader::Fragment, readFile(":/hdrv/src/shader/RenderImage.frag"));
   program->bindAttributeLocation("vertices", 0);
   program->link();
   return program;
