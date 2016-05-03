@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += qml quick
+QT += qml quick concurrent
 CONFIG += qt
 
 INCLUDEPATH += src dependencies/include \
@@ -27,8 +27,7 @@ SOURCES += src/Main.cpp \
 
 RESOURCES += hdrv.qrc
 
-OTHER_FILES = src/view/ErrorMessage.qml \
-              src/view/ExportButton.qml \
+OTHER_FILES = src/view/ExportButton.qml \
               src/view/ImageProperties.qml \
               src/view/Main.qml \
               src/view/TabBar.qml

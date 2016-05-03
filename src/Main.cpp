@@ -23,10 +23,7 @@ int main(int argc, char * argv[])
   engine.rootContext()->setContextProperty("images", &images);
 
   for (int i=1; i<app.arguments().count(); ++i) {
-    if (!images.load(QUrl::fromLocalFile(app.arguments()[i]))) {
-      engine.load(QUrl("qrc:/hdrv/src/view/ErrorMessage.qml"));
-      return app.exec();
-    }
+    images.load(QUrl::fromLocalFile(app.arguments()[i]));
   }
 
   engine.load(QUrl("qrc:/hdrv/src/view/Main.qml"));

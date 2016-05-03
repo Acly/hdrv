@@ -2,6 +2,8 @@
 
 #include <QDir>
 #include <QFileInfo>
+#include <QtConcurrent>
+#include <QFileSystemWatcher>
 
 #include <model/ImageCollection.hpp>
 
@@ -16,26 +18,78 @@ std::shared_ptr<Image> createDefaultImage()
 
 QUrl defaultUrl() { return QUrl("file:////HDRV"); }
 
-ImageDocument::ImageDocument(std::shared_ptr<Image> image, QUrl const& url, QObject * parent)
+ImageDocument::ImageDocument(QUrl const& url, QObject * parent)
   : QObject(parent)
   , name_(QFileInfo(url.fileName()).baseName())
   , url_(url)
   , scale_(1.0f)
   , brightness_(0.0f)
   , gamma_(2.2f)
-  , image_(std::move(image))
-{}
-
-ImageDocument::ImageDocument(std::shared_ptr<Image> base, std::shared_ptr<Image> comparison,
-  QUrl const& url, QObject * parent)
-  : ImageDocument(std::move(base), url, parent)
+  , image_(createDefaultImage())
+  , errorText_({ "", "", "" })
+  , watcher_(nullptr)
+  , comparisonWatcher_(nullptr)
 {
-  comparison_ = ImageComparison{ comparison };
+  watcher_ = setupWatcher(url_, false);
+  load(url_.toLocalFile(), watcher_);
 }
 
-ImageDocument::ImageDocument(QObject * parent) 
-  : ImageDocument(createDefaultImage(), defaultUrl(), parent) 
+ImageDocument::ImageDocument(QUrl const& base, QUrl const& comparison, QObject * parent)
+  : QObject(parent)
+  , name_(QFileInfo(base.fileName()).baseName() + " | " + QFileInfo(comparison.fileName()).baseName())
+  , url_(base)
+  , comparisonUrl_(comparison)
+  , scale_(1.0f)
+  , brightness_(0.0f)
+  , gamma_(2.2f)
+  , image_(createDefaultImage())
+  , errorText_({ "", "", "" })
+  , watcher_(nullptr)
+  , comparisonWatcher_(nullptr)
+{
+  watcher_ = setupWatcher(url_, false);
+  comparisonWatcher_ = setupWatcher(comparisonUrl_, true);
+
+  load(url_.toLocalFile(), watcher_);
+  load(comparisonUrl_.toLocalFile(), comparisonWatcher_);
+}
+
+ImageDocument::ImageDocument(QObject * parent)
+  : QObject(parent)
+  , name_("HDRV")
+  , url_(defaultUrl())
+  , scale_(1.0f)
+  , brightness_(0.0f)
+  , gamma_(2.2f)
+  , image_(createDefaultImage())
+  , errorText_({ "", "", "" })
+  , watcher_(nullptr)
+  , comparisonWatcher_(nullptr)
 {}
+
+QFutureWatcher<ImageDocument::LoadResult>* ImageDocument::setupWatcher(QUrl const& url, bool comparison)
+{
+  QFutureWatcher<LoadResult>* watcher = new QFutureWatcher<LoadResult>(this);
+  connect(watcher, SIGNAL(started()), this, SIGNAL(busyChanged()));
+  connect(watcher, SIGNAL(finished()), this, SIGNAL(busyChanged()));
+
+  connect(
+    watcher, &QFutureWatcher<LoadResult>::finished,
+    std::bind(&ImageDocument::loadFinished, this, watcher, url, comparison));
+
+  auto* fsWatcher = new QFileSystemWatcher(QStringList(url.toLocalFile()), this);
+  auto* delay = new QTimer(this);
+  delay->setSingleShot(true);
+
+  connect(
+    fsWatcher, &QFileSystemWatcher::fileChanged,
+    [delay]() { delay->start(500); });
+  connect(
+    delay, &QTimer::timeout,
+    std::bind(&ImageDocument::load, this, url.toLocalFile(), watcher));
+
+  return watcher;
+}
 
 QUrl ImageDocument::directory() const
 {
@@ -63,6 +117,20 @@ QString ImageDocument::fileType() const
 }
 
 bool ImageDocument::isDefault() const { return url() == defaultUrl(); }
+
+void ImageDocument::resetError()
+{
+  for (int i = 0; i < errorText_.size(); ++i) {
+    errorText_[i] = "";
+  }
+  emit errorTextChanged();
+}
+
+void ImageDocument::setError(QString const& errorText, ErrorCategory category)
+{
+  errorText_[static_cast<int>(category)] = errorText;
+  emit errorTextChanged();
+}
 
 void ImageDocument::setPosition(QPointF pos)
 {
@@ -112,16 +180,16 @@ void ImageDocument::setCurrentPixel(QPoint index)
   }
 }
 
-bool ImageDocument::store(QUrl const& url)
+void ImageDocument::store(QUrl const& url)
 {
   QFileInfo file(url.toLocalFile());
   if (file.suffix() == "hdr" || file.suffix() == "pic") {
-    return check(image()->storePIC(file.absoluteFilePath().toStdString()));
+    check(image()->storePIC(file.absoluteFilePath().toStdString()), ErrorCategory::Generic);
   } else if (file.suffix() == "pfm" || file.suffix() == "ppm") {
-    return check(image()->storePFM(file.absoluteFilePath().toStdString()));
+    check(image()->storePFM(file.absoluteFilePath().toStdString()), ErrorCategory::Generic);
+  } else {
+    setError("Unsupported file extension: " + file.suffix(), ErrorCategory::Generic);
   }
-  setError("Unsupported file extension: " + file.suffix());
-  return false;
 }
 
 QVector4D ImageDocument::pixelValue() const
@@ -140,18 +208,41 @@ QVector4D ImageDocument::pixelValue() const
   return texel;
 }
 
-bool ImageDocument::check(Result<bool> const& result)
+void ImageDocument::load(QString const& path, QFutureWatcher<LoadResult>* watcher)
 {
-  if (!result) {
-    setError(QString::fromStdString(result.error()));
-  }
-  return (bool)result;
+  QFuture<LoadResult> future = QtConcurrent::run([path]() {
+    QFileInfo file(path);
+    if (!file.exists()) {
+      return std::make_shared<Result<Image>>(QString("File " + file.absoluteFilePath() + " does not exist.").toStdString());
+    }
+    if (file.suffix() == "hdr" || file.suffix() == "pic") {
+      return std::make_shared<Result<Image>>(Image::loadPIC(file.absoluteFilePath().toStdString()));
+    } else if (file.suffix() == "pfm" || file.suffix() == "ppm") {
+      return std::make_shared<Result<Image>>(Image::loadPFM(file.absoluteFilePath().toStdString()));
+    } else if (file.suffix() == "exr") {
+      return std::make_shared<Result<Image>>(Image::loadEXR(file.absoluteFilePath().toStdString()));
+    } else {
+      return std::make_shared<Result<Image>>(Image::loadImage(file.absoluteFilePath().toStdString()));
+    }
+    return std::make_shared<Result<Image>>(Result<Image>(QString("Unknown file extension: " + file.suffix()).toStdString()));
+  });
+  watcher->setFuture(future);
 }
 
-void ImageDocument::setError(QString const& message)
+void ImageDocument::loadFinished(QFutureWatcher<LoadResult>* watcher, QUrl const& url, bool comparison)
 {
-  auto & collection = *static_cast<ImageCollection *>(parent());
-  collection.setError(message);
+  auto & result = watcher->result();
+  if (check(*result, comparison ? ErrorCategory::Comparison : ErrorCategory::Image, "Failed to load " + url.toLocalFile() + ": ")) {
+    if (!comparison) {
+      image_ = std::make_shared<Image>(std::move(*result).value());
+    } else {
+      comparison_ = ImageComparison{ std::make_shared<Image>(std::move(*result).value()) };
+    }
+    setError("", comparison ? ErrorCategory::Comparison : ErrorCategory::Image);
+    emit errorTextChanged();
+    emit fileTypeChanged();
+    emit propertyChanged();
+  }
 }
 
 }

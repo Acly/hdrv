@@ -36,6 +36,17 @@ ListView {
         color: imageTabItem.ListView.isCurrentItem ? activeColor : inactiveColor
         height: parent.height - 4
 
+        BusyIndicator {
+          id: busyIndicator
+          anchors.left: parent.left
+          anchors.top: parent.top
+          anchors.leftMargin: 3
+          anchors.topMargin: 2
+          width: imageTabIcon.width
+          height: imageTabIcon.height
+          running: busy
+        }
+
         Image {
           id: imageTabIcon
           anchors.left: parent.left
@@ -43,6 +54,7 @@ ListView {
           anchors.leftMargin: 3
           anchors.topMargin: 2
           source: 'qrc:/hdrv/media/' + fileType + '.png'
+          visible: !busy
         }
 
         Text {
@@ -148,13 +160,9 @@ ListView {
       selectMultiple: true
       onAccepted: {
         for (var i = 0; i < loadImageDialog.fileUrls.length; ++i) {
-          if (!images.load(loadImageDialog.fileUrls[i])) {
-            errorMessageDialog.open();
-          }
+          images.load(loadImageDialog.fileUrls[i]);
         }
       }
     }
-
-    ErrorMessage { id: errorMessageDialog; show: false }
   }
 }

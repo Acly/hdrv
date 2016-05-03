@@ -74,14 +74,45 @@ ApplicationWindow {
             onEntered: drag.accept(Qt.CopyAction);
             onDropped: {
               for (var i = 0; i < drop.urls.length; ++i) {
-                if (!images.load(drop.urls[i])) {
-                  errorMessageDialog.open();
-                }
+                images.load(drop.urls[i]);
               }
             }
         }
 
-        ErrorMessage { id: errorMessageDialog; show: false }
+        Rectangle {
+          id: errorBox
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.top: parent.top
+          anchors.margins: 10
+          height: Math.max(errorTextLabel.contentHeight, errorCloseButton.height) + 20
+          color: '#C0C0C0'
+          radius: 10
+          visible: images.current.errorText.join('').length > 0
+
+          Text {
+            id: errorTextLabel
+            anchors.left: parent.left
+            anchors.right: errorCloseButton.left
+            anchors.top: parent.top
+            height: parent.height
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            text: images.current.errorText.join('').replace(/^\n+|\n+$/g, '')
+            color: '#000000'
+            styleColor: '#CCCCCC'
+          }
+
+          Button {
+            id: errorCloseButton
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.topMargin: 10
+            anchors.rightMargin: 10
+            text: "Close"
+            onClicked: images.current.resetError()
+          }
+        }
       }
 
       Rectangle {
