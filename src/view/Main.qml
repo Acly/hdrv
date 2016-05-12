@@ -140,6 +140,11 @@ ApplicationWindow {
       } else if (event.key == Qt.Key_W && event.modifiers & Qt.ControlModifier) {
         if (images.items.length > 1) images.remove(images.currentIndex);
         else Qt.quit();
+      } else if (event.key == Qt.Key_Left || event.key == Qt.Key_Right) {
+        var url = images.nextFile(event.key == Qt.Key_Left);
+        if (url != "") {
+          images.replace(images.currentIndex, url);
+        }
       }
     }
   }

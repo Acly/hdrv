@@ -15,7 +15,7 @@ ListView {
   anchors.fill: parent
   orientation: Qt.Horizontal
   spacing: 2
-  focus: true
+  focus: false
   model: images.items
   delegate: imageTabDelegate
   currentIndex: images.currentIndex
@@ -156,7 +156,7 @@ ListView {
       id: loadImageDialog
       title: 'Choose an image file'
       folder: shortcuts.pictures
-      nameFilters: [ 'Image files (*.png *.jpg *.bmp *.gif)', 'HDR image files (*.hdr *.pic *.pfm *.ppm *.exr)', 'All files (*)' ]
+      nameFilters: [ 'Supported image files (' + images.supportedFormats().join(' ') + ')', 'Image files (*.png *.jpg *.bmp *.gif)', 'HDR image files (*.hdr *.pic *.pfm *.ppm *.exr)', 'All files (*)' ]
       selectMultiple: true
       onAccepted: {
         for (var i = 0; i < loadImageDialog.fileUrls.length; ++i) {

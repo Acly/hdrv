@@ -40,7 +40,11 @@ public:
   void add(ImageDocument * image);
   Q_INVOKABLE void load(QUrl const& url);
   Q_INVOKABLE void remove(int index);
+  Q_INVOKABLE void replace(int index, QUrl const& url);
   Q_INVOKABLE void compare(int index);
+
+  Q_INVOKABLE QUrl nextFile(bool prev);
+  Q_INVOKABLE QStringList supportedFormats();
 
   ImageDocument * current() const { return items_.at(currentIndex_); }
   int currentIndex() const { return currentIndex_; }

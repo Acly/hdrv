@@ -1,6 +1,7 @@
 #include <model/ImageCollection.hpp>
 
 #include <QFileInfo>
+#include <QDir>
 
 namespace hdrv {
 
@@ -29,6 +30,16 @@ void ImageCollection::load(QUrl const& url)
   add(new ImageDocument(url, this));
 }
 
+void ImageCollection::replace(int index, QUrl const& url)
+{
+  auto item = items_[index];
+  item->deleteLater();
+  items_[index] = new ImageDocument(url, this);
+  emit itemsChanged();
+  emit currentIndexChanged();
+  emit currentChanged();
+}
+
 void ImageCollection::remove(int index)
 {
   auto item = items_[index];
@@ -38,6 +49,29 @@ void ImageCollection::remove(int index)
   emit currentIndexChanged();
   emit currentChanged();
   item->deleteLater();
+}
+
+QUrl ImageCollection::nextFile(bool prev)
+{
+  if (items_.size() == 1 && items_[0]->isDefault()) {
+    return QUrl();
+  }
+  
+  QFileInfo currentFile(items_[currentIndex()]->url().toLocalFile());
+  QDir dir(currentFile.absolutePath());
+  
+  auto list = dir.entryList(supportedFormats(), QDir::Files, QDir::Name | QDir::IgnoreCase);
+  int index = list.indexOf(currentFile.fileName());
+  if (index == -1) {
+    return QUrl();
+  }
+
+  index += (prev ? -1 : 1);
+  index = index < 0 ? list.size() - 1 : index;
+  index = index >= list.size() ? 0 : index;
+  
+  QFileInfo nextFile(dir, list[index]);
+  return QUrl::fromLocalFile(nextFile.absoluteFilePath());
 }
 
 void ImageCollection::compare(int index)
@@ -52,6 +86,20 @@ void ImageCollection::setCurrentIndex(int i)
     emit currentIndexChanged();
     emit currentChanged();
   }
+}
+
+QStringList ImageCollection::supportedFormats()
+{
+  return QStringList()
+    << "*.png"
+    << "*.jpg"
+    << "*.bmp"
+    << "*.gif"
+    << "*.hdr"
+    << "*.pic"
+    << "*.pfm"
+    << "*.ppm"
+    << "*.exr";
 }
 
 }
