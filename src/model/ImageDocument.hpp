@@ -28,7 +28,7 @@ class ImageDocument : public QObject
   Q_PROPERTY(QUrl directory READ directory CONSTANT FINAL)
   Q_PROPERTY(QString fileType READ fileType NOTIFY fileTypeChanged)
   Q_PROPERTY(QSize size READ size CONSTANT FINAL)
-  Q_PROPERTY(int channels READ channels CONSTANT FINAL)
+  Q_PROPERTY(int channels READ channels NOTIFY propertyChanged)
   Q_PROPERTY(QPointF position READ position WRITE setPosition NOTIFY positionChanged)
   Q_PROPERTY(float scale READ scale WRITE setScale NOTIFY scaleChanged)
   Q_PROPERTY(qreal brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
