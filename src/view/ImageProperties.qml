@@ -69,7 +69,7 @@ Rectangle {
       }
     }
 
-    Text { text: 'Gamma:' }
+    Text { text: 'Gamma:'; visible: images.current.isFloat }
     Slider {
       id: 'gammaSlider'
       Layout.fillWidth: true
@@ -81,7 +81,7 @@ Rectangle {
       property bool initialized: false // workaround, slider sets 1.0 at start up (?)
       onValueChanged: if (initialized) images.current.gamma = gammaSlider.value;
       Component.onCompleted: initialized = true
-      enabled: images.current.isFloat
+      visible: images.current.isFloat
     }
     Text {
       text: gammaSlider.value.toFixed(1)
@@ -89,6 +89,7 @@ Rectangle {
         anchors.fill: parent
         onDoubleClicked: images.current.gamma = 2.2
       }
+      visible: images.current.isFloat
     }
 
     Text { text: '<b>Export</b>'; Layout.columnSpan: 3 }
@@ -100,8 +101,57 @@ Rectangle {
 
   }
 
-  function vectorGet(vec, i) {
-    return i == 0 ? vec.x : (i == 1 ? vec.y : (i == 2 ? vec.z : vec.w));
+  function channelName(i, numChannels, displayFormat) {
+    if(numChannels < 3) {
+      return ['L','A'][i];
+    } else {
+      if(displayFormat == 'normal') {
+        return ['X','Y','Z','A'][i];
+      } else {
+        return ['R','G','B','A'][i];
+      }
+    }
+  }
+
+  function format(vec, i, numChannels, imageIsFloat, displayFormat) {
+    var vec = [vec.x, vec.y, vec.z, vec.w];
+    var round = function(x) { return Math.floor(x * 1000.0) / 1000.0; };
+
+    if(displayFormat == 'float') {
+      if(imageIsFloat) {
+        return round(vec[i]);
+      } else {
+        return round(vec[i] / 255.0);
+      }
+    } else if(displayFormat == 'byte') {
+      if(imageIsFloat) {
+        var v = Math.floor(vec[i] * 255.0);
+        return (v > 255) ? ('<font color="red">' + v + '</font>') : v;
+      } else {
+        return vec[i];
+      }
+    } else if(displayFormat == 'normal') {
+      if(imageIsFloat) {
+        if(i < 3) {
+          var v = round(2.0 * vec[i] - 1.0);
+          return (v < -1.0 || v > 1.0) ? ('<font color="red">' + v + '</font>') : v;
+        } else {
+          return round(vec[i]);
+        }
+      } else {
+        if(i < 3) {
+          if(vec[i] == 0) {
+            return '<font color="red">---</font>';
+          } else {
+            return round((vec[i] - 128.0)/127.0);
+          }
+        } else {
+          return round(Math.floor(vec[i] / 255.0));
+        }
+      }
+    } else {
+      return round(vec[i]);
+    }
   }
 
   GridLayout {
@@ -123,10 +173,39 @@ Rectangle {
     Repeater {
       model: images.current.channels
       Text {
-        text: '  Channel ' + (index+1) + ': ' + vectorGet(images.current.pixelValue, index);
+        text: channelName(index, images.current.channels, channelFormat.current.formatType) + ': ' + format(images.current.pixelValue, index, images.current.channels, images.current.isFloat, channelFormat.current.formatType);
         Layout.columnSpan: 2
+        Layout.leftMargin: 10
+      }
+    }
+    RowLayout {
+      Layout.columnSpan: 2
+      Layout.leftMargin: 10
+      ExclusiveGroup {
+        id: channelFormat
+      }
+      RadioButton {
+        property string formatType: 'auto'
+        text: 'Auto'
+        exclusiveGroup: channelFormat
+        checked: true
+      }
+      RadioButton {
+        property string formatType: 'float'
+        text: 'Float'
+        exclusiveGroup: channelFormat
+      }
+      RadioButton {
+        property string formatType: 'byte'
+        text: 'Byte'
+        exclusiveGroup: channelFormat
+      }
+      RadioButton {
+        property string formatType: 'normal'
+        text: 'Normal'
+        exclusiveGroup: channelFormat
+        visible: image.current.channels >= 3
       }
     }
   }
-
 }

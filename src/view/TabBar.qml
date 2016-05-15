@@ -15,7 +15,7 @@ ListView {
   anchors.fill: parent
   orientation: Qt.Horizontal
   spacing: 2
-  focus: true
+  focus: false
   model: images.items
   delegate: imageTabDelegate
   currentIndex: images.currentIndex
@@ -27,6 +27,11 @@ ListView {
       height: 24
       width: imageTabText.width + 77
 
+      function closeTab(index) {
+        if (images.items.length > 1) images.remove(index);
+        else Qt.quit();
+      }
+
       Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
@@ -36,6 +41,17 @@ ListView {
         color: imageTabItem.ListView.isCurrentItem ? activeColor : inactiveColor
         height: parent.height - 4
 
+        BusyIndicator {
+          id: busyIndicator
+          anchors.left: parent.left
+          anchors.top: parent.top
+          anchors.leftMargin: 3
+          anchors.topMargin: 2
+          width: imageTabIcon.width
+          height: imageTabIcon.height
+          running: busy
+        }
+
         Image {
           id: imageTabIcon
           anchors.left: parent.left
@@ -43,6 +59,7 @@ ListView {
           anchors.leftMargin: 3
           anchors.topMargin: 2
           source: 'qrc:/hdrv/media/' + fileType + '.png'
+          visible: !busy
         }
 
         Text {
@@ -97,10 +114,7 @@ ListView {
                 }
               }
             }
-            onClicked: {
-              if (images.items.length > 1) images.remove(index);
-              else Qt.quit();
-            }
+            onClicked: closeTab(index)
           }
 
         }
@@ -117,7 +131,11 @@ ListView {
           anchors.right: buttonArea.left
           anchors.top: parent.top
           anchors.bottom: parent.bottom
-          onClicked: images.currentIndex = index
+          acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+          onClicked: {
+            if(mouse.button == Qt.MiddleButton) closeTab(index)
+            else images.currentIndex = index
+          }
         }
       }
     }
@@ -144,17 +162,13 @@ ListView {
       id: loadImageDialog
       title: 'Choose an image file'
       folder: shortcuts.pictures
-      nameFilters: [ 'Image files (*.png *.jpg *.bmp *.gif)', 'HDR image files (*.hdr *.pic *.pfm *.ppm *.exr)', 'All files (*)' ]
+      nameFilters: [ 'Supported image files (' + images.supportedFormats().join(' ') + ')', 'Image files (*.png *.jpg *.bmp *.gif)', 'HDR image files (*.hdr *.pic *.pfm *.ppm *.exr)', 'All files (*)' ]
       selectMultiple: true
       onAccepted: {
         for (var i = 0; i < loadImageDialog.fileUrls.length; ++i) {
-          if (!images.load(loadImageDialog.fileUrls[i])) {
-            errorMessageDialog.open();
-          }
+          images.load(loadImageDialog.fileUrls[i]);
         }
       }
     }
-
-    ErrorMessage { id: errorMessageDialog; show: false }
   }
 }

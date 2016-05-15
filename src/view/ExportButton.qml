@@ -84,13 +84,7 @@ Rectangle {
       folder: images.current.directory
       nameFilters: [ 'Radiance HDR (*.hdr)', 'PFM image (*.pfm)' ]
       selectExisting: false
-      onAccepted: {
-        if (!images.current.store(storeImageDialog.fileUrl)) {
-          errorMessageDialog.open();
-        }
-      }
+      onAccepted: images.current.store(storeImageDialog.fileUrl);
     }
-
-    ErrorMessage { id: errorMessageDialog; show: false }
   }
 }

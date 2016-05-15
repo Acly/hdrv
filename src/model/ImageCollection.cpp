@@ -1,6 +1,7 @@
 #include <model/ImageCollection.hpp>
 
 #include <QFileInfo>
+#include <QDir>
 
 namespace hdrv {
 
@@ -24,34 +25,19 @@ void ImageCollection::add(ImageDocument * image)
   emit currentChanged();
 }
 
-bool ImageCollection::add(QUrl const& url, Result<Image> && image)
+void ImageCollection::load(QUrl const& url)
 {
-  if (image) {
-    add(new ImageDocument(std::make_shared<Image>(std::move(image).value()), url, this));
-  } else {
-    setError(QString::fromStdString(image.error()) + " while loading file " + url.toLocalFile());
-  }
-  return (bool)image;
+  add(new ImageDocument(url, this));
 }
 
-bool ImageCollection::load(QUrl const& url)
+void ImageCollection::replace(int index, QUrl const& url)
 {
-  QFileInfo file(url.toLocalFile());
-  if (!file.exists()) {
-    setError("File " + file.absoluteFilePath() + " does not exist.");
-    return false;
-  }
-  if (file.suffix() == "hdr" || file.suffix() == "pic") {
-    return add(url, Image::loadPIC(file.absoluteFilePath().toStdString()));
-  } else if (file.suffix() == "pfm" || file.suffix() == "ppm") {
-    return add(url, Image::loadPFM(file.absoluteFilePath().toStdString()));
-  } else if (file.suffix() == "exr") {
-    return add(url, Image::loadEXR(file.absoluteFilePath().toStdString()));
-  } else {
-    return add(url, Image::loadImage(file.absoluteFilePath().toStdString()));
-  }
-  setError("Unknown file extension: " + file.suffix());
-  return false;
+  auto item = items_[index];
+  item->deleteLater();
+  items_[index] = new ImageDocument(url, this);
+  emit itemsChanged();
+  emit currentIndexChanged();
+  emit currentChanged();
 }
 
 void ImageCollection::remove(int index)
@@ -65,12 +51,32 @@ void ImageCollection::remove(int index)
   item->deleteLater();
 }
 
+QUrl ImageCollection::nextFile(bool prev)
+{
+  if (items_.size() == 1 && items_[0]->isDefault()) {
+    return QUrl();
+  }
+  
+  QFileInfo currentFile(items_[currentIndex()]->url().toLocalFile());
+  QDir dir(currentFile.absolutePath());
+  
+  auto list = dir.entryList(supportedFormats(), QDir::Files, QDir::Name | QDir::IgnoreCase);
+  int index = list.indexOf(currentFile.fileName());
+  if (index == -1) {
+    return QUrl();
+  }
+
+  index += (prev ? -1 : 1);
+  index = index < 0 ? list.size() - 1 : index;
+  index = index >= list.size() ? 0 : index;
+  
+  QFileInfo nextFile(dir, list[index]);
+  return QUrl::fromLocalFile(nextFile.absoluteFilePath());
+}
+
 void ImageCollection::compare(int index)
 {
-  auto & currentImage = current()->image();
-  auto & comparisonImage = items_[index]->image();
-  auto url = QUrl("file:////" + current()->name() + " | " + items_[index]->name());
-  add(new ImageDocument(currentImage, comparisonImage, url, this));
+  add(new ImageDocument(current()->url(), items_[index]->url(), this));
 }
 
 void ImageCollection::setCurrentIndex(int i)
@@ -82,10 +88,18 @@ void ImageCollection::setCurrentIndex(int i)
   }
 }
 
-void ImageCollection::setError(QString const& message)
+QStringList ImageCollection::supportedFormats()
 {
-  errorMessage_ = message;
-  emit errorMessageChanged();
+  return QStringList()
+    << "*.png"
+    << "*.jpg"
+    << "*.bmp"
+    << "*.gif"
+    << "*.hdr"
+    << "*.pic"
+    << "*.pfm"
+    << "*.ppm"
+    << "*.exr";
 }
 
 }

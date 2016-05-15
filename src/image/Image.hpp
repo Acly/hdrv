@@ -47,7 +47,7 @@ public:
   template<typename T>
   T value(int x, int y, int channel) const
   {
-    auto i = (y * width() + x) * channels() + channel;
+    auto i = ((height() - y - 1) * width() + x) * channels() + channel;
     if (format_ == Float) {
       float const* d = reinterpret_cast<float const*>(data_.data());
       return T(d[i]);

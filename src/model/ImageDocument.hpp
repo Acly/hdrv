@@ -7,6 +7,7 @@
 #include <QPoint>
 #include <QUrl>
 #include <QVector4D>
+#include <QFutureWatcher>
 
 #include <image/Image.hpp>
 
@@ -22,10 +23,12 @@ class ImageDocument : public QObject
   Q_OBJECT
   Q_PROPERTY(QString name READ name CONSTANT FINAL)
   Q_PROPERTY(QUrl url READ url CONSTANT FINAL)
+  Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
+  Q_PROPERTY(QStringList errorText READ errorText NOTIFY errorTextChanged)
   Q_PROPERTY(QUrl directory READ directory CONSTANT FINAL)
-  Q_PROPERTY(QString fileType READ fileType CONSTANT FINAL)
-  Q_PROPERTY(QSize size READ size CONSTANT FINAL)
-  Q_PROPERTY(int channels READ channels CONSTANT FINAL)
+  Q_PROPERTY(QString fileType READ fileType NOTIFY fileTypeChanged)
+  Q_PROPERTY(QSize size READ size NOTIFY propertyChanged)
+  Q_PROPERTY(int channels READ channels NOTIFY propertyChanged)
   Q_PROPERTY(QPointF position READ position WRITE setPosition NOTIFY positionChanged)
   Q_PROPERTY(float scale READ scale WRITE setScale NOTIFY scaleChanged)
   Q_PROPERTY(qreal brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
@@ -34,19 +37,20 @@ class ImageDocument : public QObject
   Q_PROPERTY(qreal gamma READ gamma WRITE setGamma NOTIFY gammaChanged)
   Q_PROPERTY(qreal minGamma READ minGamma CONSTANT FINAL)
   Q_PROPERTY(qreal maxGamma READ maxGamma CONSTANT FINAL)
-  Q_PROPERTY(bool isFloat READ isFloat CONSTANT FINAL)
+  Q_PROPERTY(bool isFloat READ isFloat NOTIFY propertyChanged)
   Q_PROPERTY(QPoint pixelPosition READ pixelPosition NOTIFY pixelPositionChanged)
   Q_PROPERTY(QVector4D pixelValue READ pixelValue NOTIFY pixelValueChanged)
   Q_PROPERTY(bool isComparison READ isComparison CONSTANT FINAL)
 
 public:
-  ImageDocument(std::shared_ptr<Image> image, QUrl const& url, QObject * parent = nullptr);
-  ImageDocument(std::shared_ptr<Image> base, std::shared_ptr<Image> comparison,
-    QUrl const& url, QObject * parent = nullptr);
+  ImageDocument(QUrl const& url, QObject * parent = nullptr);
+  ImageDocument(QUrl const& base, QUrl const& comparison, QObject * parent = nullptr);
   ImageDocument(QObject * parent = nullptr);
 
   QString const& name() const { return name_; }
   QUrl const& url() const { return url_; }
+  bool busy() const { return (watcher_ && watcher_->isRunning()) || (comparisonWatcher_ && comparisonWatcher_->isRunning()); }
+  QStringList const& errorText() const { return errorText_; }
   QUrl directory() const;
   QString fileType() const;
   QPointF position() const { return position_; }
@@ -70,6 +74,9 @@ public:
   bool isComparison() const { return (bool)comparison_; }
   boost::optional<ImageComparison> const& comparison() const { return comparison_; }
 
+  enum class ErrorCategory { Image, Comparison, Generic };
+  void setError(QString const& errorText, ErrorCategory category);
+
   void setPosition(QPointF pos);
   void move(QPointF offset);
   void setScale(qreal scale);
@@ -77,9 +84,12 @@ public:
   void setGamma(qreal gamma);
   void setCurrentPixel(QPoint index);
 
-  Q_INVOKABLE bool store(QUrl const& url);
+  Q_INVOKABLE void resetError();
+  Q_INVOKABLE void store(QUrl const& url);
 
 signals:
+  void busyChanged();
+  void errorTextChanged();
   void propertyChanged();
   void positionChanged();
   void scaleChanged();
@@ -87,14 +97,26 @@ signals:
   void gammaChanged();
   void pixelPositionChanged();
   void pixelValueChanged();
+  void fileTypeChanged();
 
 private:
+  typedef std::shared_ptr<Result<Image>> LoadResult;
+  QFutureWatcher<LoadResult>* setupWatcher(QUrl const& url, bool comparison);
+  void load(QString const& path, QFutureWatcher<LoadResult>* watcher);
+  void loadFinished(QFutureWatcher<LoadResult>* watcher, QUrl const& url, bool comparison);
 
-  bool check(Result<bool> const&);
-  void setError(QString const& message);
+  template<class T>
+  bool check(Result<T> const& result, ErrorCategory category, QString const& prefix = "") {
+    if (!result) {
+      setError(prefix + QString::fromStdString(result.error()), category);
+    }
+    return (bool)result;
+  }
 
   QString name_;
   QUrl url_;
+  QUrl comparisonUrl_;
+  QStringList errorText_;
   QPointF position_;
   qreal scale_;
   qreal brightness_;
@@ -102,7 +124,9 @@ private:
   QPoint pixelPosition_;
   QVector4D pixelValue_;
   std::shared_ptr<Image> image_;
+  QFutureWatcher<LoadResult>* watcher_;
   boost::optional<ImageComparison> comparison_;
+  QFutureWatcher<LoadResult>* comparisonWatcher_;
 };
 
 Q_DECLARE_METATYPE(ImageDocument*);
