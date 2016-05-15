@@ -27,6 +27,11 @@ ListView {
       height: 24
       width: imageTabText.width + 77
 
+      function closeTab(index) {
+        if (images.items.length > 1) images.remove(index);
+        else Qt.quit();
+      }
+
       Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
@@ -109,10 +114,7 @@ ListView {
                 }
               }
             }
-            onClicked: {
-              if (images.items.length > 1) images.remove(index);
-              else Qt.quit();
-            }
+            onClicked: closeTab(index)
           }
 
         }
@@ -129,7 +131,11 @@ ListView {
           anchors.right: buttonArea.left
           anchors.top: parent.top
           anchors.bottom: parent.bottom
-          onClicked: images.currentIndex = index
+          acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+          onClicked: {
+            if(mouse.button == Qt.MiddleButton) closeTab(index)
+            else images.currentIndex = index
+          }
         }
       }
     }
