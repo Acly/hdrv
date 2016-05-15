@@ -35,7 +35,7 @@ class ImageDocument : public QObject
   Q_PROPERTY(bool isFloat READ isFloat NOTIFY propertyChanged)
   Q_PROPERTY(QPoint pixelPosition READ pixelPosition NOTIFY pixelPositionChanged)
   Q_PROPERTY(QVector4D pixelValue READ pixelValue NOTIFY pixelValueChanged)
-  Q_PROPERTY(bool isComparison READ isComparison CONSTANT FINAL)
+  Q_PROPERTY(bool isComparison READ isComparison NOTIFY isComparisonChanged)
   Q_PROPERTY(ComparisonMode comparisonMode READ comparisonMode WRITE setComparisonMode NOTIFY comparisonModeChanged)
   Q_PROPERTY(float comparisonSeparator READ comparisonSeparator WRITE setComparisonSeparator NOTIFY comparisonSeparatorChanged)
 
@@ -111,6 +111,7 @@ signals:
   void gammaChanged();
   void pixelPositionChanged();
   void pixelValueChanged();
+  void isComparisonChanged();
   void comparisonModeChanged();
   void comparisonSeparatorChanged();
   void fileTypeChanged();

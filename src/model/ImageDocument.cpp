@@ -254,6 +254,7 @@ void ImageDocument::loadFinished(QFutureWatcher<LoadResult>* watcher, QUrl const
       image_ = std::make_shared<Image>(std::move(*result).value());
     } else {
       comparison_ = Comparison(std::make_shared<Image>(std::move(*result).value()));
+      emit isComparisonChanged();
     }
     setError("", comparison ? ErrorCategory::Comparison : ErrorCategory::Image);
     emit errorTextChanged();
