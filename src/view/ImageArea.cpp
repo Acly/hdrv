@@ -97,27 +97,47 @@ void ImageArea::reposition(ImageDocument & img)
   img.setPosition(newPos);
 }
 
+void ImageArea::updateComparisonSeparator(ImageDocument & img, QPointF pos)
+{
+  if (img.isComparison() && img.comparisonMode() == ComparisonMode::SideBySide) {
+    auto bounds = imageBounds(img);
+    if (bounds.contains(pos)) {
+      float s = (pos.x() - bounds.left()) / bounds.width();
+      img.setComparisonSeparator(s);
+    }
+  }
+}
+
 void ImageArea::mousePressEvent(QMouseEvent * event)
 {
   if (event->button() == Qt::MouseButton::LeftButton) {
     setCursor(Qt::ClosedHandCursor);
     mousePosition_ = event->localPos();
+  } else if (event->button() == Qt::MouseButton::RightButton && images_ &&
+             images_->current()->comparisonMode() == ComparisonMode::SideBySide) {
+    setCursor(Qt::SplitHCursor);
+    updateComparisonSeparator(*images_->current(), event->localPos());
   }
 }
 
-void ImageArea::mouseReleaseEvent(QMouseEvent * event)
+void ImageArea::mouseReleaseEvent(QMouseEvent *)
 {
-  if (event->button() == Qt::MouseButton::LeftButton) {
-    unsetCursor();
-  }
+  unsetCursor();
 }
 
 void ImageArea::mouseMoveEvent(QMouseEvent * event)
 {
-  if (images_ && event->buttons() & Qt::MouseButton::LeftButton) {
-    images_->current()->move(mousePosition_ - event->localPos());
-    mousePosition_ = event->localPos();
-    reposition(*images_->current());
+  if (images_) {
+    auto & img = *images_->current();
+
+    if (event->buttons() & Qt::MouseButton::LeftButton) {
+      img.move(mousePosition_ - event->localPos());
+      mousePosition_ = event->localPos();
+      reposition(img);
+    }
+    if (event->buttons() & Qt::MouseButton::RightButton) {
+      updateComparisonSeparator(img, event->localPos());
+    }
   }
 }
 
@@ -127,7 +147,7 @@ void ImageArea::wheelEvent(QWheelEvent * event)
     float mul = event->angleDelta().y() > 0 ? 2.0 : 0.5;
 
     auto & img = *images_->current();
-    auto & bounds = imageBounds(img);
+    auto bounds = imageBounds(img);
     if (bounds.contains(event->posF())) {
       QPointF pos = (event->posF() - bounds.center());
       QPointF newPos = mul * pos;

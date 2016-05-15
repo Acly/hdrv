@@ -92,6 +92,41 @@ Rectangle {
       visible: images.current.isFloat
     }
 
+    Text {
+      text: '<b>Comparison</b>'
+      Layout.columnSpan: 3
+      visible: images.current.isComparison
+    }
+
+    Text {
+      text: 'Mode:'
+      visible: images.current.isComparison
+    }
+    Row {
+      Layout.columnSpan: 2
+      visible: images.current.isComparison
+      spacing: 10
+
+      RadioButton {
+        id: differenceButton
+        text: 'Difference'
+        exclusiveGroup: comparisonModeGroup
+      }
+      RadioButton {
+        id: sideBySideButton
+        text: 'Side by side'
+        exclusiveGroup: comparisonModeGroup
+      }
+      ExclusiveGroup {
+        id: comparisonModeGroup
+        current: images.current.comparisonMode == ImageDocument.Difference ? differenceButton : sideBySideButton
+        onCurrentChanged: {
+          if (current == differenceButton) images.current.comparisonMode = ImageDocument.Difference;
+          else images.current.comparisonMode = ImageDocument.SideBySide;
+        }
+      }
+    }
+
     Text { text: '<b>Export</b>'; Layout.columnSpan: 3 }
 
     ExportButton {

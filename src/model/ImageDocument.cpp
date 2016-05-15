@@ -180,6 +180,23 @@ void ImageDocument::setCurrentPixel(QPoint index)
   }
 }
 
+void ImageDocument::setComparisonMode(ComparisonMode mode)
+{
+  if (comparison_ && comparison_->mode != mode) {
+    comparison_->mode = mode;
+    emit comparisonModeChanged();
+  }
+}
+
+void ImageDocument::setComparisonSeparator(float value)
+{
+  if (comparison_ && !qFuzzyCompare(comparison_->separator, value)) {
+    comparison_->separator = value;
+    emit comparisonSeparatorChanged();
+    emit propertyChanged();
+  }
+}
+
 void ImageDocument::store(QUrl const& url)
 {
   QFileInfo file(url.toLocalFile());
@@ -236,7 +253,7 @@ void ImageDocument::loadFinished(QFutureWatcher<LoadResult>* watcher, QUrl const
     if (!comparison) {
       image_ = std::make_shared<Image>(std::move(*result).value());
     } else {
-      comparison_ = ImageComparison{ std::make_shared<Image>(std::move(*result).value()) };
+      comparison_ = Comparison(std::make_shared<Image>(std::move(*result).value()));
     }
     setError("", comparison ? ErrorCategory::Comparison : ErrorCategory::Image);
     emit errorTextChanged();

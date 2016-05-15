@@ -49,6 +49,7 @@ private slots:
 private:
   QRectF imageBounds(ImageDocument const & img) const;
   void reposition(ImageDocument & img);
+  void updateComparisonSeparator(ImageDocument & img, QPointF pos);
 
   QColor color_;
   ImageCollection * images_;

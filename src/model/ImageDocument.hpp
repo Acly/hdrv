@@ -13,11 +13,6 @@
 
 namespace hdrv {
 
-struct ImageComparison
-{
-  std::shared_ptr<Image> image;
-};
-
 class ImageDocument : public QObject
 {
   Q_OBJECT
@@ -41,8 +36,23 @@ class ImageDocument : public QObject
   Q_PROPERTY(QPoint pixelPosition READ pixelPosition NOTIFY pixelPositionChanged)
   Q_PROPERTY(QVector4D pixelValue READ pixelValue NOTIFY pixelValueChanged)
   Q_PROPERTY(bool isComparison READ isComparison CONSTANT FINAL)
+  Q_PROPERTY(ComparisonMode comparisonMode READ comparisonMode WRITE setComparisonMode NOTIFY comparisonModeChanged)
+  Q_PROPERTY(float comparisonSeparator READ comparisonSeparator WRITE setComparisonSeparator NOTIFY comparisonSeparatorChanged)
 
 public:
+  enum class ComparisonMode { Difference, SideBySide };
+  Q_ENUMS(ComparisonMode)
+  
+  struct Comparison
+  {
+    std::shared_ptr<Image> image;
+    ComparisonMode mode = ComparisonMode::Difference;
+    float separator = 0.5f;
+
+    Comparison() = default;
+    Comparison(std::shared_ptr<Image> i) : image(std::move(i)) {}
+  };
+
   ImageDocument(QUrl const& url, QObject * parent = nullptr);
   ImageDocument(QUrl const& base, QUrl const& comparison, QObject * parent = nullptr);
   ImageDocument(QObject * parent = nullptr);
@@ -72,7 +82,9 @@ public:
   QVector4D pixelValue() const;
   bool isDefault() const;
   bool isComparison() const { return (bool)comparison_; }
-  boost::optional<ImageComparison> const& comparison() const { return comparison_; }
+  boost::optional<Comparison> const& comparison() const { return comparison_; }
+  ComparisonMode comparisonMode() const { return comparison_.value_or(Comparison()).mode; }
+  float comparisonSeparator() const { return comparison_.value_or(Comparison()).separator; }
 
   enum class ErrorCategory { Image, Comparison, Generic };
   void setError(QString const& errorText, ErrorCategory category);
@@ -83,6 +95,8 @@ public:
   void setBrightness(qreal brightness);
   void setGamma(qreal gamma);
   void setCurrentPixel(QPoint index);
+  void setComparisonMode(ComparisonMode mode);
+  void setComparisonSeparator(float value);
 
   Q_INVOKABLE void resetError();
   Q_INVOKABLE void store(QUrl const& url);
@@ -97,6 +111,8 @@ signals:
   void gammaChanged();
   void pixelPositionChanged();
   void pixelValueChanged();
+  void comparisonModeChanged();
+  void comparisonSeparatorChanged();
   void fileTypeChanged();
 
 private:
@@ -124,10 +140,13 @@ private:
   QPoint pixelPosition_;
   QVector4D pixelValue_;
   std::shared_ptr<Image> image_;
+  boost::optional<Comparison> comparison_;
   QFutureWatcher<LoadResult>* watcher_;
-  boost::optional<ImageComparison> comparison_;
   QFutureWatcher<LoadResult>* comparisonWatcher_;
 };
+
+using ImageComparison = ImageDocument::Comparison;
+using ComparisonMode = ImageDocument::ComparisonMode;
 
 Q_DECLARE_METATYPE(ImageDocument*);
 

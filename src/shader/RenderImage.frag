@@ -9,8 +9,12 @@ uniform vec2 regionSize;
 uniform float gamma;
 uniform float brightness;
 uniform int mode;
+uniform float separator;
 
 varying highp vec2 coords;
+
+#define Difference 0
+#define SideBySide 1
 
 void main()
 {
@@ -19,9 +23,13 @@ void main()
     vec3 checker = (int(floor(0.1*coords.x*regionSize.x) + floor(0.1*coords.y*regionSize.y)) & 1) > 0 ? vec3(0.4) : vec3(0.6);
     vec4 texel = texture2D(tex, pos);
 
-    if (mode == 1) { // difference
+    if (mode == Difference) {
       vec4 comp = texture2D(comparison, pos);
       texel = vec4(abs(comp - texel).xyz, 1.0);
+    } else if (mode == SideBySide) {
+      if (pos.x > separator) {
+        texel = texture2D(comparison, pos);
+      }
     }
 
     vec3 color = pow(brightness * texel.xyz, vec3(gamma));

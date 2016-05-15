@@ -127,9 +127,10 @@ void ImageRenderer::paint()
   if (comparison_) {
     textures_[comparison_->image]->bind(1);
     program_->setUniformValue("comparison", 1);
-    program_->setUniformValue("mode", 1);
+    program_->setUniformValue("mode", (int)comparison_->mode);
+    program_->setUniformValue("separator", comparison_->separator);
   } else {
-    program_->setUniformValue("mode", 0);
+    program_->setUniformValue("mode", -1);
   }
 
   glViewport(region.offset.x(), region.offset.y(), region.size.width(), region.size.height());
