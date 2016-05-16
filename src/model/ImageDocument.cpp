@@ -8,8 +8,6 @@
 #include <model/ImageCollection.hpp>
 
 namespace hdrv {
-
-float const scaleValues[] = { 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
   
 std::shared_ptr<Image> createDefaultImage()
 {

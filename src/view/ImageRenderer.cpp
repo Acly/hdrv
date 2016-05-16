@@ -105,7 +105,7 @@ void ImageRenderer::paint()
     initializeOpenGLFunctions();
     program_ = createProgram();
   }
-  
+
   program_->bind();
   program_->enableAttributeArray(0);
   program_->setAttributeArray(0, GL_FLOAT, vertexData, 2);
