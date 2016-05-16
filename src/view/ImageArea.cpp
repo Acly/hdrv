@@ -101,10 +101,8 @@ void ImageArea::updateComparisonSeparator(ImageDocument & img, QPointF pos)
 {
   if (img.isComparison() && img.comparisonMode() == ComparisonMode::SideBySide) {
     auto bounds = imageBounds(img);
-    if (bounds.contains(pos)) {
-      float s = (pos.x() - bounds.left()) / bounds.width();
-      img.setComparisonSeparator(s);
-    }
+    float s = (pos.x() - bounds.left()) / bounds.width();
+    img.setComparisonSeparator(s);
   }
 }
 
