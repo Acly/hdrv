@@ -108,11 +108,14 @@ void ImageArea::updateComparisonSeparator(ImageDocument & img, QPointF pos)
 
 void ImageArea::mousePressEvent(QMouseEvent * event)
 {
+  if (!images_) return;
+
   if (event->button() == Qt::MouseButton::LeftButton) {
     setCursor(Qt::ClosedHandCursor);
     mousePosition_ = event->localPos();
-  } else if (event->button() == Qt::MouseButton::RightButton && images_ &&
-             images_->current()->comparisonMode() == ComparisonMode::SideBySide) {
+  } else if (event->button() == Qt::MouseButton::RightButton && images_) {
+    auto & img = *images_->current();
+    img.setComparisonMode(ComparisonMode::SideBySide);
     setCursor(Qt::SplitHCursor);
     updateComparisonSeparator(*images_->current(), event->localPos());
   }
