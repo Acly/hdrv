@@ -35,6 +35,8 @@ void ImageCollection::replace(int index, QUrl const& url)
   auto item = items_[index];
   item->deleteLater();
   items_[index] = new ImageDocument(url, this);
+  items_[index]->setPosition(item->position());
+  items_[index]->setScale(item->scale());
   emit itemsChanged();
   emit currentIndexChanged();
   emit currentChanged();
