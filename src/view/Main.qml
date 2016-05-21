@@ -1,4 +1,4 @@
-import QtQuick 2.3
+import QtQuick 2.5
 import QtQuick.Controls 1.2
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Layouts 1.2
@@ -11,6 +11,13 @@ ApplicationWindow {
   visible: true
   color: 'black'
   title: images.current.name + ' - hdrv 0.2'
+
+  function loadNextFile(prev) {
+    var url = images.nextFile(prev);
+    if (url != "") {
+      images.replace(images.currentIndex, url);
+    }
+  }
 
   ColumnLayout {
     anchors.fill: parent
@@ -124,28 +131,53 @@ ApplicationWindow {
       ImageProperties {
         id: imageProperties
         visible: imagePropertiesButton.checked
+        enabled: imagePropertiesButton.checked
+        focus: imagePropertiesButton.checked
         Layout.fillHeight: true
         Layout.preferredWidth: 240
       }
     }
 
-    Keys.onPressed: {
-      if (event.key == Qt.Key_Plus) {
-        images.current.brightness = Math.round(images.current.brightness + 1.0)
-      } else if (event.key == Qt.Key_Minus) {
-        images.current.brightness = Math.round(images.current.brightness - 1.0)
-      } else if (event.key == Qt.Key_R) {
+    Shortcut {
+      sequence: '+'
+      context: Qt.ApplicationShortcut
+      onActivated: images.current.brightness = Math.round(images.current.brightness + 1.0)
+    }
+
+    Shortcut {
+      sequence: '-'
+      context: Qt.ApplicationShortcut
+      onActivated: images.current.brightness = Math.round(images.current.brightness - 1.0)
+    }
+
+    Shortcut {
+      sequence: 'R'
+      context: Qt.ApplicationShortcut
+      onActivated: {
         images.current.position = Qt.point(0, 0)
         images.current.scale = 1.0
-      } else if (event.key == Qt.Key_W && event.modifiers & Qt.ControlModifier) {
+      }
+    }
+
+    Shortcut {
+      sequence: StandardKey.Close
+      context: Qt.ApplicationShortcut
+      onActivated: {
         if (images.items.length > 1) images.remove(images.currentIndex);
         else Qt.quit();
-      } else if (event.key == Qt.Key_Left || event.key == Qt.Key_Right) {
-        var url = images.nextFile(event.key == Qt.Key_Left);
-        if (url != "") {
-          images.replace(images.currentIndex, url);
-        }
       }
+    }
+
+    Shortcut {
+      sequence: StandardKey.MoveToPreviousChar
+      context: Qt.ApplicationShortcut
+      onActivated: loadNextFile(true)
+    }
+
+    Shortcut {
+      sequence: StandardKey.MoveToNextChar
+      context: Qt.ApplicationShortcut
+      onActivated: loadNextFile(false)
     }
   }
 }
