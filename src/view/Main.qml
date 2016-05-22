@@ -179,5 +179,33 @@ ApplicationWindow {
       context: Qt.ApplicationShortcut
       onActivated: loadNextFile(false)
     }
+
+    Shortcut {
+      sequence: 'C'
+      context: Qt.ApplicationShortcut
+      onActivated: {
+        if(images.current.isComparison) {
+          images.current.comparisonMode = ImageDocument.Difference;
+        } else {
+          if(images.recentItems.length > 1) {
+            var i = images.recentItems[images.recentItems.length-2];
+            if(!images.items[i].isComparison) {
+              images.compare(i);
+            }
+          }
+        }
+      }
+    }
+
+    Shortcut {
+      sequence: 'S'
+      context: Qt.ApplicationShortcut
+      onActivated: {
+        if(images.recentItems.length > 1) {
+          var i = images.recentItems[images.recentItems.length-2];
+          images.currentIndex = i;
+        }
+      }
+    }
   }
 }

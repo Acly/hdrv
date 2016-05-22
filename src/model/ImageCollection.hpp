@@ -14,6 +14,7 @@ class ImageCollection : public QObject
 {
   Q_OBJECT
   Q_PROPERTY(QQmlListProperty<ImageDocument> items READ items NOTIFY itemsChanged)
+  Q_PROPERTY(QList<int> recentItems READ recentItems)
   Q_PROPERTY(ImageDocument* current READ current NOTIFY currentChanged)
   Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
 
@@ -48,7 +49,8 @@ public:
 
   ImageDocument * current() const { return items_.at(currentIndex_); }
   int currentIndex() const { return currentIndex_; }
-  
+  QList<int> const& recentItems() const { return recentItems_; };
+
   void setCurrentIndex(int i);
 
   Collection const& vector() const { return items_; }
@@ -57,9 +59,13 @@ signals:
   void itemsChanged();
   void currentChanged();
   void currentIndexChanged();
+ 
+private slots:
+  void updateRecentItems();
 
 private:
   Collection items_;
+  QList<int> recentItems_;
   int currentIndex_;
 };
 
