@@ -185,6 +185,7 @@ void ImageDocument::setComparisonMode(ComparisonMode mode)
   if (comparison_ && comparison_->mode != mode) {
     comparison_->mode = mode;
     emit comparisonModeChanged();
+    emit propertyChanged();
   }
 }
 

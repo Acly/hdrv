@@ -9,6 +9,8 @@ ImageCollection::ImageCollection(QObject * parent)
   : QObject(parent)
   , currentIndex_(-1)
 {
+  connect(this, SIGNAL(currentIndexChanged()), this, SLOT(updateRecentItems()));
+
   add(new ImageDocument);
   setCurrentIndex(0);
 }
@@ -35,6 +37,8 @@ void ImageCollection::replace(int index, QUrl const& url)
   auto item = items_[index];
   item->deleteLater();
   items_[index] = new ImageDocument(url, this);
+  items_[index]->setPosition(item->position());
+  items_[index]->setScale(item->scale());
   emit itemsChanged();
   emit currentIndexChanged();
   emit currentChanged();
@@ -43,6 +47,7 @@ void ImageCollection::replace(int index, QUrl const& url)
 void ImageCollection::remove(int index)
 {
   auto item = items_[index];
+  recentItems_.removeOne(index);
   currentIndex_ = std::min(currentIndex(), (int)items_.size() - 2);
   items_.erase(items_.begin() + index);
   emit itemsChanged();
@@ -86,6 +91,13 @@ void ImageCollection::setCurrentIndex(int i)
     emit currentIndexChanged();
     emit currentChanged();
   }
+}
+
+void ImageCollection::updateRecentItems()
+{
+  int index = currentIndex();
+  recentItems_.removeOne(index);
+  recentItems_.push_back(index);
 }
 
 QStringList ImageCollection::supportedFormats()
