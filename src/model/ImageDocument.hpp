@@ -149,6 +149,6 @@ private:
 using ImageComparison = ImageDocument::Comparison;
 using ComparisonMode = ImageDocument::ComparisonMode;
 
-Q_DECLARE_METATYPE(ImageDocument*);
-
 }
+
+Q_DECLARE_METATYPE(hdrv::ImageDocument*);

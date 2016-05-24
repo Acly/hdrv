@@ -69,7 +69,7 @@ private:
   int currentIndex_;
 };
 
-Q_DECLARE_METATYPE(QQmlListProperty<ImageDocument>)
-Q_DECLARE_METATYPE(ImageCollection*)
-
 }
+
+Q_DECLARE_METATYPE(QQmlListProperty<hdrv::ImageDocument>)
+Q_DECLARE_METATYPE(hdrv::ImageCollection*)
