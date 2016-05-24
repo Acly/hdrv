@@ -2,6 +2,7 @@ TEMPLATE = app
 
 QT += qml quick concurrent
 CONFIG += qt
+CONFIG += c++11
 
 INCLUDEPATH += src dependencies/include \
                $$BOOST_ROOT
