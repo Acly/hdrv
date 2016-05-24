@@ -122,7 +122,7 @@ void ImageRenderer::paint()
   program_->setUniformValue("position", texturePosition(regionSize, imageSize, settings_.position));
   program_->setUniformValue("scale", textureScale(regionSize, imageSize));
   program_->setUniformValue("regionSize", regionSize);
-  program_->setUniformValue("brightness", pow(2.0f, settings_.brightness));
+  program_->setUniformValue("brightness", std::pow(2.0f, settings_.brightness));
   program_->setUniformValue("gamma", current_->format() == Image::Float ? 1.0f / settings_.gamma : 1.0f);
   if (comparison_) {
     textures_[comparison_->image]->bind(1);
