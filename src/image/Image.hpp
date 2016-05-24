@@ -42,20 +42,8 @@ public:
   int pixelSizeInBytes() const { return format_ == Byte ? sizeof(uint8_t) : sizeof(float); }
   int sizeInBytes() const { return width_ * height_ * channels_ * pixelSizeInBytes(); }
   Format format() const { return format_; }
-  void const* data() const { return data_.data(); }
-
-  template<typename T>
-  T value(int x, int y, int channel) const
-  {
-    auto i = ((height() - y - 1) * width() + x) * channels() + channel;
-    if (format_ == Float) {
-      float const* d = reinterpret_cast<float const*>(data_.data());
-      return T(d[i]);
-    } else {
-      uint8_t const* d = reinterpret_cast<uint8_t const*>(data_.data());
-      return T(d[i]);
-    } 
-  }
+  uint8_t const* data() const { return data_.data(); }
+  float value(int x, int y, int channel) const;
 
   Result<bool> storePFM(std::string const& path) const;
   Result<bool> storePIC(std::string const& path) const;

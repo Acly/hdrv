@@ -211,13 +211,13 @@ void ImageDocument::store(QUrl const& url)
 QVector4D ImageDocument::pixelValue() const
 {
   QVector4D texel;
-  texel.setX(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 0));
+  texel.setX(image_->value(pixelPosition_.x(), pixelPosition_.y(), 0));
   if (channels() > 1) {
-    texel.setY(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 1));
+    texel.setY(image_->value(pixelPosition_.x(), pixelPosition_.y(), 1));
     if (channels() > 2) {
-      texel.setZ(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 2));
+      texel.setZ(image_->value(pixelPosition_.x(), pixelPosition_.y(), 2));
       if (channels() > 3) {
-        texel.setW(image_->value<float>(pixelPosition_.x(), pixelPosition_.y(), 3));
+        texel.setW(image_->value(pixelPosition_.x(), pixelPosition_.y(), 3));
       }
     }
   }

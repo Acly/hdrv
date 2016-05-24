@@ -13,7 +13,7 @@ namespace hdrv {
 class ImageCollection : public QObject
 {
   Q_OBJECT
-  Q_PROPERTY(QQmlListProperty<ImageDocument> items READ items NOTIFY itemsChanged)
+  Q_PROPERTY(QQmlListProperty<hdrv::ImageDocument> items READ items NOTIFY itemsChanged)
   Q_PROPERTY(QList<int> recentItems READ recentItems)
   Q_PROPERTY(ImageDocument* current READ current NOTIFY currentChanged)
   Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)

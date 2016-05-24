@@ -29,6 +29,18 @@ Image Image::makeEmpty()
   return Image(0, 0, 1, Byte, std::move(data));
 }
 
+float Image::value(int x, int y, int channel) const
+{
+  auto i = ((height() - y - 1) * width() + x) * channels() + channel;
+  if (format_ == Float) {
+    float result;
+    memcpy(&result, data() + i * sizeof(float), sizeof(float));
+    return result;
+  } else {
+    return (float)data_[i];
+  }
+}
+
 // PFM
 
 Result<Image> Image::loadPFM(std::string const& path)
@@ -76,9 +88,9 @@ Result<bool> Image::storePFM(std::string const& path) const
     std::unique_ptr<pfm::color_pixel[]> scanline(new pfm::color_pixel[width()]);
     for (int y = 0; y < height(); ++y) {
       for (int x = 0; x < width(); ++x) {
-        scanline[x][0] = value<float>(x, y, 0);
-        scanline[x][1] = value<float>(x, y, 1);
-        scanline[x][2] = value<float>(x, y, 2);
+        scanline[x][0] = value(x, y, 0);
+        scanline[x][1] = value(x, y, 1);
+        scanline[x][2] = value(x, y, 2);
       }
       file.write_color_scanline(scanline.get(), width());
     }
@@ -147,7 +159,7 @@ Result<bool> Image::storePIC(std::string const& path) const
     std::unique_ptr<pic::pixel[]> scanline(new pic::pixel[width()]);
     for (int y = height() - 1; y >= 0; --y) {
       for (int x = 0; x < width(); ++x) {
-        pic::rgb_to_rgbe(value<float>(x, y, 0), value<float>(x, y, 1), value<float>(x, y, 2),
+        pic::rgb_to_rgbe(value(x, y, 0), value(x, y, 1), value(x, y, 2),
           scanline[x][0], scanline[x][1], scanline[x][2], scanline[x][3]);
       }
       file.write_scanline(scanline.get(), width());
