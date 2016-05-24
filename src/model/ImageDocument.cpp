@@ -247,7 +247,7 @@ void ImageDocument::load(QString const& path, QFutureWatcher<LoadResult>* watche
 
 void ImageDocument::loadFinished(QFutureWatcher<LoadResult>* watcher, QUrl const& url, bool comparison)
 {
-  auto & result = watcher->result();
+  const auto & result = watcher->result();
   if (check(*result, comparison ? ErrorCategory::Comparison : ErrorCategory::Image, "Failed to load " + url.toLocalFile() + ": ")) {
     if (!comparison) {
       image_ = std::make_shared<Image>(std::move(*result).value());
