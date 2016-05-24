@@ -167,7 +167,7 @@ void ImageArea::hoverMoveEvent(QHoverEvent * event)
 {
   if (images_ && images_->current()) {
     auto & img = *images_->current();
-    auto & bounds = imageBounds(img);
+	const auto & bounds = imageBounds(img);
     if (bounds.contains(event->posF())) {
       QPointF positionOnImage = (event->posF() - bounds.topLeft()) / img.scale();
       images_->current()->setCurrentPixel(QPoint(positionOnImage.x(), positionOnImage.y()));

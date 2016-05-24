@@ -20,11 +20,11 @@ ImageDocument::ImageDocument(QUrl const& url, QObject * parent)
   : QObject(parent)
   , name_(QFileInfo(url.fileName()).baseName())
   , url_(url)
+  , errorText_({ "", "", "" })
   , scale_(1.0f)
   , brightness_(0.0f)
   , gamma_(2.2f)
   , image_(createDefaultImage())
-  , errorText_({ "", "", "" })
   , watcher_(nullptr)
   , comparisonWatcher_(nullptr)
 {
@@ -37,11 +37,11 @@ ImageDocument::ImageDocument(QUrl const& base, QUrl const& comparison, QObject *
   , name_(QFileInfo(base.fileName()).baseName() + " | " + QFileInfo(comparison.fileName()).baseName())
   , url_(base)
   , comparisonUrl_(comparison)
+  , errorText_({ "", "", "" })
   , scale_(1.0f)
   , brightness_(0.0f)
   , gamma_(2.2f)
   , image_(createDefaultImage())
-  , errorText_({ "", "", "" })
   , watcher_(nullptr)
   , comparisonWatcher_(nullptr)
 {
@@ -56,11 +56,11 @@ ImageDocument::ImageDocument(QObject * parent)
   : QObject(parent)
   , name_("HDRV")
   , url_(defaultUrl())
+  , errorText_({ "", "", "" })
   , scale_(1.0f)
   , brightness_(0.0f)
   , gamma_(2.2f)
   , image_(createDefaultImage())
-  , errorText_({ "", "", "" })
   , watcher_(nullptr)
   , comparisonWatcher_(nullptr)
 {}
@@ -247,7 +247,7 @@ void ImageDocument::load(QString const& path, QFutureWatcher<LoadResult>* watche
 
 void ImageDocument::loadFinished(QFutureWatcher<LoadResult>* watcher, QUrl const& url, bool comparison)
 {
-  auto & result = watcher->result();
+  const auto & result = watcher->result();
   if (check(*result, comparison ? ErrorCategory::Comparison : ErrorCategory::Image, "Failed to load " + url.toLocalFile() + ": ")) {
     if (!comparison) {
       image_ = std::make_shared<Image>(std::move(*result).value());
