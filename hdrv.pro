@@ -2,7 +2,7 @@ TEMPLATE = app
 
 QT += qml quick concurrent
 CONFIG += qt
-CONFIG += c++11
+CONFIG += c++14
 
 INCLUDEPATH += src dependencies/include \
                $$BOOST_ROOT
@@ -12,6 +12,8 @@ win32:Debug:LIBS += -L$$PWD/dependencies/lib_win64_vc14_debug \
 win32:Release:LIBS += -L$$PWD/dependencies/lib_win64_vc14_release \
                       -lpic -lpfm -lHalf -lIlmImf-2_2 -lIex-2_2 -lIlmThread-2_2 -lzlibstatic
 win32:RC_FILE = media/hdrv.rc
+
+unix: LIBS += -lpic -lpfm -lHalf -lIlmImf
 
 HEADERS += src/image/Image.hpp \
            src/model/ImageCollection.hpp \
