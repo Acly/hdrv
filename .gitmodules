@@ -1,0 +1,27 @@
+[submodule "dependencies/boost/optional"]
+	path = dependencies/boost/optional
+	url = https://github.com/boostorg/optional.git
+[submodule "dependencies/boost/core"]
+	path = dependencies/boost/core
+	url = https://github.com/boostorg/core.git
+[submodule "dependencies/boost/type_traits"]
+	path = dependencies/boost/type_traits
+	url = https://github.com/boostorg/type_traits.git
+[submodule "dependencies/boost/assert"]
+	path = dependencies/boost/assert
+	url = https://github.com/boostorg/assert.git
+[submodule "dependencies/boost/static_assert"]
+	path = dependencies/boost/static_assert
+	url = https://github.com/boostorg/static_assert.git
+[submodule "dependencies/boost/config"]
+	path = dependencies/boost/config
+	url = https://github.com/boostorg/config.git
+[submodule "dependencies/boost/throw_exception"]
+	path = dependencies/boost/throw_exception
+	url = https://github.com/boostorg/throw_exception.git
+[submodule "dependencies/boost/move"]
+	path = dependencies/boost/move
+	url = https://github.com/boostorg/move.git
+[submodule "dependencies/boost/utility"]
+	path = dependencies/boost/utility
+	url = https://github.com/boostorg/utility.git

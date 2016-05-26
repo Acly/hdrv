@@ -4,9 +4,9 @@ QT += qml quick concurrent
 CONFIG += qt
 CONFIG += c++14
 
-INCLUDEPATH += . \ 
-               ../dependencies/include \
-               $$BOOST_ROOT
+include(../dependencies/boost/boost.pri)
+
+INCLUDEPATH += . ../dependencies/include $$BOOST_ROOT
 
 Debug:LIBS += -L$$OUT_PWD/../dependencies/pic/debug \
               -L$$OUT_PWD/../dependencies/pfm/debug
