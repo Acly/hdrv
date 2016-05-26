@@ -26,7 +26,7 @@ int main(int argc, char * argv[])
     images.load(QUrl::fromLocalFile(app.arguments()[i]));
   }
 
-  engine.load(QUrl("qrc:/hdrv/src/view/Main.qml"));
+  engine.load(QUrl("qrc:/hdrv/view/Main.qml"));
 
   return app.exec();
 }
