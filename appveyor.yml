@@ -1,4 +1,5 @@
-version: 1.0.{build}
+version: 0.4.{build}
+skip_tags: true
 configuration:
 - Debug
 - Release
@@ -11,14 +12,14 @@ before_build:
 
     cd build
 
-    qmake -tp vc ../hdrv.pro "BOOST_ROOT=C:\Libraries\boost_1_60_0"
+    qmake -tp vc -r ../hdrv.pro "BOOST_ROOT=C:\Libraries\boost_1_60_0"
 
     cd ..
 build:
-  project: build\hdrv.vcxproj
+  project: build\hdrv.sln
   verbosity: minimal
 after_build:
-- cmd: 7z a hdrv_%CONFIGURATION%.zip %APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\hdrv.*
+- cmd: 7z a hdrv_%CONFIGURATION%.zip %APPVEYOR_BUILD_FOLDER%\build\viewer\%CONFIGURATION%\hdrv.*
 artifacts:
 - path: hdrv_Debug.zip
   name: HDRV Debug
