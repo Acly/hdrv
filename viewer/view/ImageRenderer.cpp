@@ -19,8 +19,8 @@ QString readFile(QString const& name)
 std::unique_ptr<QOpenGLShaderProgram> createProgram()
 {
   auto program = std::make_unique<QOpenGLShaderProgram>();
-  program->addShaderFromSourceCode(QOpenGLShader::Vertex, readFile(":/hdrv/src/shader/RenderImage.vert"));
-  program->addShaderFromSourceCode(QOpenGLShader::Fragment, readFile(":/hdrv/src/shader/RenderImage.frag"));
+  program->addShaderFromSourceCode(QOpenGLShader::Vertex, readFile(":/hdrv/shader/RenderImage.vert"));
+  program->addShaderFromSourceCode(QOpenGLShader::Fragment, readFile(":/hdrv/shader/RenderImage.frag"));
   program->bindAttributeLocation("vertices", 0);
   program->link();
   return program;

@@ -14,31 +14,45 @@ GUI which displays HDR images, no bullshit.
 
 ## Build
 
-* Install Qt 5.5
-* Download [boost](http://www.boost.org/) (headers are sufficient, no need to build)
-* Clone the repository from `https://github.com/Acly/hdrv.git`
+[![TravisBuildStatus](https://travis-ci.org/Acly/hdrv.svg?branch=master)](https://travis-ci.org/Acly/hdrv)
+![AppVeyorBuildStatus](https://ci.appveyor.com/api/projects/status/github/Acly/hdrv?branch=master&svg=true)
+
+The only prerequisite is that Qt 5.5 or newer is installed on the system.
+
+### Checkout
+
+```
+git clone https://github.com/Acly/hdrv.git hdrv
+cd hdrv
+git submodule update --init
+mkdir build
+cd build   
+```
+
+Updating submodules will download the required [boost](http://www.boost.org/) modules. You
+can skip this step and use an existing boost installation by passing `"BOOST_ROOT=/path/to/boost/include"`
+to qmake in the next step. 
 
 ### Windows - VC14
 ```
-mkdir build
-cd build   
-qmake -tp vc ../hdrv.pro "BOOST_ROOT=/path/to/boost"
+qmake -tp vc -r ../hdrv.pro
 ```
 
-This generates a project file which can be used to build the application with Visual Studio.
-After building, runtime libraries can be copied with `windeployqt --qmldir ../src/view release/hdrv.exe`.
+This generates a Visual Studio solution which can be used to build the application.
+After building, runtime libraries can be copied with `windeployqt --qmldir ../viewer/view viewer/release/hdrv.exe`.
 
 Tested using Visual Studio 2015 Update 2 x64.
 
-### Other Platforms
+### Linux
 
-When building for a different platform the following dependencies will have to be installed or built from source and provided where the linker can find them:
-* [OpenEXR 2.2.0](http://www.openexr.com/)
-* [zlib 1.2.8](http://www.zlib.net)
-* [libpic 0.1](http://people.cs.kuleuven.be/~ares.lagae/libpic/)
-* [libpfm 0.1](http://people.cs.kuleuven.be/~ares.lagae/libpfm/)
+Building requires a C++14 compiler and [OpenEXR 2.2.0](http://www.openexr.com/)
+to be installed. Most distributions have precompiled packages available. To build run:
 
-Entirely untested, but there is no platform-dependent code or anything else any modern compiler shouldn't be able to handle.
+```
+qmake .. && make
+```
+
+Tested using GCC 5.
 
 ## Use
 
@@ -63,5 +77,5 @@ use the _Open image_ button in the tab bar.
 ## TODO
 
 * Show more stats (average / maximum / minimum color)
-* Hight quality tone mapping
+* High quality tone mapping
 * Better support for existing formats (encodings, layouts)
