@@ -14,6 +14,7 @@ GUI which displays HDR images, no bullshit.
 
 ## Build
 
+[![TravisBuildStatus](https://travis-ci.org/Acly/hdrv.svg?branch=master)](https://travis-ci.org/Acly/hdrv)
 ![AppVeyorBuildStatus](https://ci.appveyor.com/api/projects/status/github/Acly/hdrv?branch=master&svg=true)
 
 The only prerequisite is that Qt 5.5 or newer is installed on the system.
