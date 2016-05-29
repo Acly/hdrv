@@ -37,6 +37,32 @@ ApplicationWindow {
         }
 
         Button {
+          id: serverButton
+          Layout.preferredWidth: 30
+          Layout.preferredHeight: 20
+          Layout.alignment: Qt.AlignBottom
+          iconSource: 'qrc:/hdrv/media/Save.png'
+          style: ButtonStyle {
+            background: Item {
+              Rectangle {
+                anchors.fill: parent
+                anchors.rightMargin: 4
+                anchors.leftMargin: 4
+                color: server.running || control.hovered ? '#FAFAFA' : '#C0C0C0'
+              }
+            }
+          }
+          onClicked: {
+            if(server.running) {
+              server.stop();
+            } else {
+              client.remoteStopServer();
+              server.start();
+            }
+          }
+        }
+
+        Button {
           id: imagePropertiesButton
           Layout.preferredWidth: 26
           Layout.preferredHeight: 20
