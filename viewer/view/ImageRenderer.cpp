@@ -30,14 +30,37 @@ namespace hdrv {
 
 QOpenGLTexture::TextureFormat format(Image const& image)
 {
-  return image.format() == Image::Float ?
-    (image.channels() == 3 ? QOpenGLTexture::RGB32F : QOpenGLTexture::RGBA32F) :
-    (image.channels() == 3 ? QOpenGLTexture::RGBFormat : QOpenGLTexture::RGBAFormat);
+  switch (image.format()) {
+    case Image::Float: {
+      switch (image.channels()) {
+        case 1: return QOpenGLTexture::R32F;
+        case 3: return QOpenGLTexture::RGB32F;
+        case 4: return QOpenGLTexture::RGBA32F;
+        default: return QOpenGLTexture::RGBA32F;
+      }
+    }
+    case Image::Byte: {
+      switch (image.channels()) {
+        case 1: return QOpenGLTexture::R8_UNorm;
+        case 3: return QOpenGLTexture::RGBFormat;
+        case 4: return QOpenGLTexture::RGBAFormat;
+        default: return QOpenGLTexture::RGBAFormat;
+      }
+    }
+    default: return QOpenGLTexture::RGBA32F;
+  }
 }
 
 QOpenGLTexture::PixelFormat pixelFormat(Image const& image)
 {
-  return image.channels() == 3 ? QOpenGLTexture::RGB : QOpenGLTexture::RGBA;
+  switch (image.channels()) {
+    case 1: return QOpenGLTexture::Luminance;
+    case 3: return QOpenGLTexture::RGB;
+    case 4: return QOpenGLTexture::RGBA;
+    default:
+      qWarning() << "Cannot render image with " << image.channels() << " channels.";
+      return QOpenGLTexture::Luminance;
+  }
 }
 
 QOpenGLTexture::PixelType pixelType(Image const& image)
@@ -56,6 +79,10 @@ std::unique_ptr<QOpenGLTexture> createTexture(Image const& image)
   texture->setMagnificationFilter(QOpenGLTexture::Nearest);
   texture->setWrapMode(QOpenGLTexture::ClampToBorder);
   texture->generateMipMaps();
+  if (image.channels() == 1) {
+    texture->setSwizzleMask(QOpenGLTexture::RedValue, QOpenGLTexture::RedValue,
+                            QOpenGLTexture::RedValue, QOpenGLTexture::OneValue);
+  }
   return texture;
 }
 
