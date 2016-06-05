@@ -7,6 +7,12 @@
 
 #include <model/ImageCollection.hpp>
 
+#include <sstream>
+
+#ifdef WIN32
+# include <windows.h>
+#endif // WIN32
+
 namespace hdrv {
   
 std::shared_ptr<Image> createDefaultImage()
@@ -28,6 +34,7 @@ ImageDocument::ImageDocument(QUrl const& url, QObject * parent)
   , watcher_(nullptr)
   , comparisonWatcher_(nullptr)
 {
+  init();
   watcher_ = setupWatcher(url_, false);
   load(url_.toLocalFile(), watcher_);
 }
@@ -45,6 +52,7 @@ ImageDocument::ImageDocument(QUrl const& base, QUrl const& comparison, QObject *
   , watcher_(nullptr)
   , comparisonWatcher_(nullptr)
 {
+  init();
   watcher_ = setupWatcher(url_, false);
   comparisonWatcher_ = setupWatcher(comparisonUrl_, true);
 
@@ -63,7 +71,22 @@ ImageDocument::ImageDocument(QObject * parent)
   , image_(createDefaultImage())
   , watcher_(nullptr)
   , comparisonWatcher_(nullptr)
-{}
+{
+  init();
+}
+
+void ImageDocument::init()
+{
+  thumbnailsAvailable_ = false;
+#ifdef WIN32
+  QFileInfo thumbDll(QDir(QCoreApplication::applicationDirPath()), "thumbnails.dll");
+  thumbnailsAvailable_ = thumbDll.exists();
+  if (thumbnailsAvailable_)
+  {
+    thumbnailDll_ = thumbDll.absoluteFilePath();
+  }
+#endif // WIN32
+}
 
 QFutureWatcher<ImageDocument::LoadResult>* ImageDocument::setupWatcher(QUrl const& url, bool comparison)
 {
@@ -206,6 +229,20 @@ void ImageDocument::store(QUrl const& url)
   } else {
     setError("Unsupported file extension: " + file.suffix(), ErrorCategory::Generic);
   }
+}
+
+void ImageDocument::changeThumbnailHandler(bool remove)
+{
+#ifdef WIN32
+  std::ostringstream oss;
+  oss << "/s";
+  if (remove) {
+    oss << " /u";
+  }
+  oss << " \"" << thumbnailDll_.toStdString() << "\"";
+  std::string arguments = oss.str();
+  ShellExecuteA(0, "runas", "regsvr32.exe", arguments.c_str(), nullptr, SW_SHOWNORMAL);
+#endif // WIN32
 }
 
 QVector4D ImageDocument::pixelValue() const

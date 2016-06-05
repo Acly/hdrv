@@ -38,6 +38,7 @@ class ImageDocument : public QObject
   Q_PROPERTY(bool isComparison READ isComparison NOTIFY isComparisonChanged)
   Q_PROPERTY(ComparisonMode comparisonMode READ comparisonMode WRITE setComparisonMode NOTIFY comparisonModeChanged)
   Q_PROPERTY(float comparisonSeparator READ comparisonSeparator WRITE setComparisonSeparator NOTIFY comparisonSeparatorChanged)
+  Q_PROPERTY(bool thumbnailsAvailable READ thumbnailsAvailable CONSTANT FINAL)
 
 public:
   enum class ComparisonMode { Difference, SideBySide };
@@ -85,6 +86,7 @@ public:
   boost::optional<Comparison> const& comparison() const { return comparison_; }
   ComparisonMode comparisonMode() const { return comparison_.value_or(Comparison()).mode; }
   float comparisonSeparator() const { return comparison_.value_or(Comparison()).separator; }
+  bool thumbnailsAvailable() const { return thumbnailsAvailable_; }
 
   enum class ErrorCategory { Image, Comparison, Generic };
   void setError(QString const& errorText, ErrorCategory category);
@@ -100,6 +102,7 @@ public:
 
   Q_INVOKABLE void resetError();
   Q_INVOKABLE void store(QUrl const& url);
+  Q_INVOKABLE void changeThumbnailHandler(bool remove);
 
 signals:
   void busyChanged();
@@ -121,6 +124,7 @@ private:
   QFutureWatcher<LoadResult>* setupWatcher(QUrl const& url, bool comparison);
   void load(QString const& path, QFutureWatcher<LoadResult>* watcher);
   void loadFinished(QFutureWatcher<LoadResult>* watcher, QUrl const& url, bool comparison);
+  void init();
 
   template<class T>
   bool check(Result<T> const& result, ErrorCategory category, QString const& prefix = "") {
@@ -144,6 +148,8 @@ private:
   boost::optional<Comparison> comparison_;
   QFutureWatcher<LoadResult>* watcher_;
   QFutureWatcher<LoadResult>* comparisonWatcher_;
+  bool thumbnailsAvailable_;
+  QString thumbnailDll_;
 };
 
 using ImageComparison = ImageDocument::Comparison;

@@ -200,6 +200,27 @@ Rectangle {
     anchors.rightMargin: 10
     anchors.bottomMargin: 10
 
+    Text { text: '<b>Thumbnail Handler</b>'; Layout.columnSpan: 2; visible: images.current.thumbnailsAvailable }
+
+    RowLayout {
+      Layout.columnSpan: 2
+      Layout.fillWidth: true
+      spacing: 10
+      visible: images.current.thumbnailsAvailable
+
+      Button {
+        Layout.fillWidth: true
+        text: 'Install'
+        onClicked: images.current.changeThumbnailHandler(false)
+      }
+
+      Button {
+        Layout.fillWidth: true
+        text: 'Uninstall'
+        onClicked: images.current.changeThumbnailHandler(true)
+      }
+    }
+
     Text { text: 'Resolution:' }
     Text { text: images.current.size.width + ' x ' + images.current.size.height }
     Text { text: 'Cursor position:' }
