@@ -27,6 +27,7 @@ win32:RC_FILE = ../media/hdrv.rc
 HEADERS += image/Image.hpp \
            model/ImageCollection.hpp \
            model/ImageDocument.hpp \
+           model/Settings.hpp \
            view/ImageArea.hpp \
            view/ImageRenderer.hpp
 
@@ -34,6 +35,7 @@ SOURCES += Main.cpp \
            image/Image.cpp \
            model/ImageCollection.cpp \
            model/ImageDocument.cpp \
+           model/Settings.cpp \
            view/ImageArea.cpp \
            view/ImageRenderer.cpp
 
@@ -42,6 +44,7 @@ RESOURCES += viewer.qrc
 OTHER_FILES = view/ExportButton.qml \
               view/ImageProperties.qml \
               view/Main.qml \
-              view/TabBar.qml
+              view/TabBar.qml \
+              view/AppSettings.qml
 
 TARGET = hdrv

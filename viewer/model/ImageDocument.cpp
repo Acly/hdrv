@@ -7,14 +7,8 @@
 
 #include <model/ImageCollection.hpp>
 
-#include <sstream>
-
-#ifdef WIN32
-# include <windows.h>
-#endif // WIN32
-
 namespace hdrv {
-  
+
 std::shared_ptr<Image> createDefaultImage()
 {
   return std::make_shared<Image>(Image::makeEmpty());
@@ -26,15 +20,8 @@ ImageDocument::ImageDocument(QUrl const& url, QObject * parent)
   : QObject(parent)
   , name_(QFileInfo(url.fileName()).baseName())
   , url_(url)
-  , errorText_({ "", "", "" })
-  , scale_(1.0f)
-  , brightness_(0.0f)
-  , gamma_(2.2f)
   , image_(createDefaultImage())
-  , watcher_(nullptr)
-  , comparisonWatcher_(nullptr)
 {
-  init();
   watcher_ = setupWatcher(url_, false);
   load(url_.toLocalFile(), watcher_);
 }
@@ -44,15 +31,8 @@ ImageDocument::ImageDocument(QUrl const& base, QUrl const& comparison, QObject *
   , name_(QFileInfo(base.fileName()).baseName() + " | " + QFileInfo(comparison.fileName()).baseName())
   , url_(base)
   , comparisonUrl_(comparison)
-  , errorText_({ "", "", "" })
-  , scale_(1.0f)
-  , brightness_(0.0f)
-  , gamma_(2.2f)
   , image_(createDefaultImage())
-  , watcher_(nullptr)
-  , comparisonWatcher_(nullptr)
 {
-  init();
   watcher_ = setupWatcher(url_, false);
   comparisonWatcher_ = setupWatcher(comparisonUrl_, true);
 
@@ -62,31 +42,9 @@ ImageDocument::ImageDocument(QUrl const& base, QUrl const& comparison, QObject *
 
 ImageDocument::ImageDocument(QObject * parent)
   : QObject(parent)
-  , name_("HDRV")
   , url_(defaultUrl())
-  , errorText_({ "", "", "" })
-  , scale_(1.0f)
-  , brightness_(0.0f)
-  , gamma_(2.2f)
   , image_(createDefaultImage())
-  , watcher_(nullptr)
-  , comparisonWatcher_(nullptr)
-{
-  init();
-}
-
-void ImageDocument::init()
-{
-  thumbnailsAvailable_ = false;
-#ifdef WIN32
-  QFileInfo thumbDll(QDir(QCoreApplication::applicationDirPath()), "thumbnails.dll");
-  thumbnailsAvailable_ = thumbDll.exists();
-  if (thumbnailsAvailable_)
-  {
-    thumbnailDll_ = thumbDll.absoluteFilePath();
-  }
-#endif // WIN32
-}
+{}
 
 QFutureWatcher<ImageDocument::LoadResult>* ImageDocument::setupWatcher(QUrl const& url, bool comparison)
 {
@@ -231,20 +189,6 @@ void ImageDocument::store(QUrl const& url)
   }
 }
 
-void ImageDocument::changeThumbnailHandler(bool remove)
-{
-#ifdef WIN32
-  std::ostringstream oss;
-  oss << "/s";
-  if (remove) {
-    oss << " /u";
-  }
-  oss << " \"" << thumbnailDll_.toStdString() << "\"";
-  std::string arguments = oss.str();
-  ShellExecuteA(0, "runas", "regsvr32.exe", arguments.c_str(), nullptr, SW_SHOWNORMAL);
-#endif // WIN32
-}
-
 QVector4D ImageDocument::pixelValue() const
 {
   QVector4D texel;
@@ -265,26 +209,26 @@ void ImageDocument::load(QString const& path, QFutureWatcher<LoadResult>* watche
 {
   QFuture<LoadResult> future = QtConcurrent::run([path]() {
     QFileInfo file(path);
+    std::string path = file.absoluteFilePath().toStdString();
     if (!file.exists()) {
-      return std::make_shared<Result<Image>>(QString("File " + file.absoluteFilePath() + " does not exist.").toStdString());
+      return std::make_shared<Result<Image>>("File " + path + " does not exist.");
     }
     if (file.suffix() == "hdr" || file.suffix() == "pic") {
-      return std::make_shared<Result<Image>>(Image::loadPIC(file.absoluteFilePath().toStdString()));
+      return std::make_shared<Result<Image>>(Image::loadPIC(path));
     } else if (file.suffix() == "pfm" || file.suffix() == "ppm") {
-      return std::make_shared<Result<Image>>(Image::loadPFM(file.absoluteFilePath().toStdString()));
+      return std::make_shared<Result<Image>>(Image::loadPFM(path));
     } else if (file.suffix() == "exr") {
-      return std::make_shared<Result<Image>>(Image::loadEXR(file.absoluteFilePath().toStdString()));
+      return std::make_shared<Result<Image>>(Image::loadEXR(path));
     } else {
-      return std::make_shared<Result<Image>>(Image::loadImage(file.absoluteFilePath().toStdString()));
+      return std::make_shared<Result<Image>>(Image::loadImage(path));
     }
-    return std::make_shared<Result<Image>>(Result<Image>(QString("Unknown file extension: " + file.suffix()).toStdString()));
   });
   watcher->setFuture(future);
 }
 
 void ImageDocument::loadFinished(QFutureWatcher<LoadResult>* watcher, QUrl const& url, bool comparison)
 {
-  const auto & result = watcher->result();
+  auto result = watcher->result();
   if (check(*result, comparison ? ErrorCategory::Comparison : ErrorCategory::Image, "Failed to load " + url.toLocalFile() + ": ")) {
     if (!comparison) {
       image_ = std::make_shared<Image>(std::move(*result).value());

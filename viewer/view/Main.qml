@@ -38,23 +38,44 @@ ApplicationWindow {
 
         Button {
           id: imagePropertiesButton
-          Layout.preferredWidth: 30
+          Layout.preferredWidth: 26
           Layout.preferredHeight: 20
           Layout.alignment: Qt.AlignBottom
           iconSource: 'qrc:/hdrv/media/Properties.png'
           checkable: true
+          onClicked: if (settingsButton.checked) settingsButton.checked = false;
           style: ButtonStyle {
             background: Item {
               Rectangle {
                 anchors.fill: parent
-                anchors.rightMargin: 4
-                anchors.leftMargin: 4
+                anchors.rightMargin: 2
+                anchors.leftMargin: 2
                 color: control.checked || control.hovered ? '#FAFAFA' : '#C0C0C0'
               }
             }
           }
         }
 
+        Button {
+          id: settingsButton
+          Layout.preferredWidth: 28
+          Layout.preferredHeight: 20
+          Layout.alignment: Qt.AlignBottom
+          iconSource: 'qrc:/hdrv/media/Settings.png'
+          visible: settings.thumbnailsAvailable
+          checkable: true
+          onClicked: if (imagePropertiesButton.checked) imagePropertiesButton.checked = false;
+          style: ButtonStyle {
+            background: Item {
+              Rectangle {
+                anchors.fill: parent
+                anchors.rightMargin: 4
+                anchors.leftMargin: 2
+                color: control.checked || control.hovered ? '#FAFAFA' : '#C0C0C0'
+              }
+            }
+          }
+        }
       }
     }
 
@@ -133,6 +154,13 @@ ApplicationWindow {
         visible: imagePropertiesButton.checked
         enabled: imagePropertiesButton.checked
         focus: imagePropertiesButton.checked
+        Layout.fillHeight: true
+        Layout.preferredWidth: 240
+      }
+
+      AppSettings {
+        id: settingsPane
+        visible: settingsButton.checked
         Layout.fillHeight: true
         Layout.preferredWidth: 240
       }
