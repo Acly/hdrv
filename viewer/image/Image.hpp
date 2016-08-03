@@ -5,6 +5,8 @@
 #include <vector>
 #include <boost/optional.hpp>
 
+#include <OpenEXR/ImfIO.h>
+
 namespace hdrv {
 
 template<typename T>
@@ -36,6 +38,10 @@ public:
   static Result<Image> loadEXR(std::string const& path);
   static Result<Image> loadImage(std::string const& path);
 
+  static Result<Image> loadPFM(std::istream & stream);
+  static Result<Image> loadPIC(std::istream & stream);
+  static Result<Image> loadEXR(Imf::IStream & stream);
+
   int width() const { return width_; }
   int height() const { return height_; }
   int channels() const { return channels_; }
@@ -48,6 +54,8 @@ public:
   Result<bool> storePFM(std::string const& path) const;
   Result<bool> storePIC(std::string const& path) const;
   Result<bool> storeEXR(std::string const& path) const;
+
+  Result<Image> scaleByHalf() const;
 
   Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data);
 

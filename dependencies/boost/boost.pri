@@ -7,5 +7,13 @@ isEmpty(BOOST_ROOT) {
                $$PWD/type_traits/include \
                $$PWD/utility/include \
                $$PWD/move/include \
-               $$PWD/optional/include
+               $$PWD/optional/include \
+               $$PWD/iostreams/include \
+               $$PWD/preprocessor/include \
+               $$PWD/mpl/include \
+               $$PWD/range/include \
+               $$PWD/iterator/include \
+               $$PWD/detail/include \
+               $$PWD/concept_check/include \
+               $$PWD/integer/include
 }

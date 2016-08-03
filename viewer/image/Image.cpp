@@ -41,12 +41,67 @@ float Image::value(int x, int y, int channel) const
   }
 }
 
+Result<Image> Image::scaleByHalf() const
+{
+  // Looses some pixels for odd resolutions
+
+  if (width_ <= 1 && height_ <= 1) {
+    return Result<Image>("Image is too small for further downscaling by half.");
+  }
+
+  int newWidth = std::max(width_ / 2, 1);
+  int newHeight = std::max(height_ / 2, 1);
+
+  std::vector<uint8_t> newdata(newWidth * newHeight * channels_ * pixelSizeInBytes());
+  if (format_ == Float)
+  {
+    for (int x = 0; x < newWidth; ++x)
+      for (int y = 0; y < newHeight; ++y)
+        for (int c = 0; c < channels_; ++c)
+        {
+          float avg = 0.f;
+          for (int xo = 0; xo < 2; ++xo)
+            for (int yo = 0; yo < 2; ++yo)
+            {
+              avg += value(
+                std::min(x * 2 + xo, width_ - 1),
+                std::max(height_ - y * 2 - yo - 1, 0),
+                c);
+            }
+
+          const int outputOffset =
+            y * channels_ * newWidth +
+            x * channels_ +
+            c;
+
+          avg /= 4.f;
+          memcpy(newdata.data() + outputOffset * sizeof(float), &avg, sizeof(float));
+        }
+  }
+  else
+  {
+    return Result<Image>("Scaling non-floating-point images is not supported.");
+  }
+
+  return Result<Image>(Image(newWidth, newHeight, channels_, format_, std::move(newdata)));
+}
+
 // PFM
 
 Result<Image> Image::loadPFM(std::string const& path)
 {
   try {
     std::ifstream stream(path, std::ios::binary);
+    return loadPFM(stream);
+  }
+  catch (std::exception const& e) {
+    return Result<Image>(std::string("PFM loader: ") + e.what());
+  }
+}
+
+Result<Image> Image::loadPFM(std::istream & stream)
+{
+  try {
     pfm::pfm_input_file file(stream);
 
     pfm::format_type format;
@@ -107,6 +162,16 @@ Result<Image> Image::loadPIC(std::string const& path)
 {
   try {
     std::ifstream stream(path, std::ios::binary);
+    return loadPIC(stream);
+  }
+  catch (std::exception const& e) {
+    return Result<Image>(std::string("Radiance PIC loader: ") + e.what());
+  }
+}
+
+Result<Image> Image::loadPIC(std::istream & stream)
+{
+  try {
     pic::pic_input_file file(stream);
 
     pic::format_type format;
@@ -173,10 +238,9 @@ Result<bool> Image::storePIC(std::string const& path) const
 
 // ILM OpenEXR
 
-Result<Image> Image::loadEXR(std::string const& path)
+Result<Image> loadEXR(Imf::RgbaInputFile &&file)
 {
   try {
-    Imf::RgbaInputFile file(path.c_str());
     auto dw = file.dataWindow();
     int w = dw.max.x - dw.min.x + 1;
     int h = dw.max.y - dw.min.y + 1;
@@ -198,11 +262,22 @@ Result<Image> Image::loadEXR(std::string const& path)
         d[index + 3] = (float)p.a;
       }
     }
-    return Result<Image>(Image(w, h, c, Float, std::move(data)));
+    return Result<Image>(Image(w, h, c, Image::Float, std::move(data)));
 
-  } catch (std::exception const& e) {
+  }
+  catch (std::exception const& e) {
     return Result<Image>(std::string("OpenEXR loader: ") + e.what());
   }
+}
+
+Result<Image> Image::loadEXR(Imf::IStream & stream)
+{
+  return hdrv::loadEXR(Imf::RgbaInputFile(stream));
+}
+
+Result<Image> Image::loadEXR(std::string const& path)
+{
+  return hdrv::loadEXR(Imf::RgbaInputFile(path.c_str()));
 }
 
 // Qt LDR Image

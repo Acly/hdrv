@@ -25,3 +25,27 @@
 [submodule "dependencies/boost/utility"]
 	path = dependencies/boost/utility
 	url = https://github.com/boostorg/utility.git
+[submodule "dependencies/boost/iostreams"]
+	path = dependencies/boost/iostreams
+	url = https://github.com/boostorg/iostreams.git
+[submodule "dependencies/boost/preprocessor"]
+	path = dependencies/boost/preprocessor
+	url = https://github.com/boostorg/preprocessor.git
+[submodule "dependencies/boost/mpl"]
+	path = dependencies/boost/mpl
+	url = https://github.com/boostorg/mpl.git
+[submodule "dependencies/boost/range"]
+	path = dependencies/boost/range
+	url = https://github.com/boostorg/range.git
+[submodule "dependencies/boost/iterator"]
+	path = dependencies/boost/iterator
+	url = https://github.com/boostorg/iterator.git
+[submodule "dependencies/boost/detail"]
+	path = dependencies/boost/detail
+	url = https://github.com/boostorg/detail.git
+[submodule "dependencies/boost/concept_check"]
+	path = dependencies/boost/concept_check
+	url = https://github.com/boostorg/concept_check.git
+[submodule "dependencies/boost/integer"]
+	path = dependencies/boost/integer
+	url = https://github.com/boostorg/integer.git
