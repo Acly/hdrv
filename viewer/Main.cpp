@@ -48,7 +48,7 @@ int main(int argc, char * argv[])
     return 0;
   }
 
-  if (!client.isServerAvailable()) {
+  if (settings.singleInstance() && !client.isServerAvailable()) {
     server.start();
   }
 

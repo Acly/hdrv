@@ -42,5 +42,15 @@ Rectangle {
       }
     }
 
+    Text {
+      text: '<b>Startup</b>'
+    }
+
+    CheckBox {
+      Layout.fillWidth: true
+      text: 'Start application in single-instance mode.'
+      checked: settings.singleInstance
+      onClicked: settings.singleInstance = this.checked
+    }
   }
 }
