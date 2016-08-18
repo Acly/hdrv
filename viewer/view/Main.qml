@@ -88,7 +88,6 @@ ApplicationWindow {
           Layout.preferredHeight: 20
           Layout.alignment: Qt.AlignBottom
           iconSource: 'qrc:/hdrv/media/Settings.png'
-          visible: settings.thumbnailsAvailable
           checkable: true
           onClicked: if (imagePropertiesButton.checked) imagePropertiesButton.checked = false;
           style: ButtonStyle {
