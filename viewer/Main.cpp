@@ -13,6 +13,18 @@
 
 using namespace hdrv;
 
+void moveToForeground()
+{
+  QWindowList l = QGuiApplication::allWindows();
+  if (l.size() > 0 && l.at(0) != nullptr) {
+    QWindow* w = l.at(0);
+    w->requestActivate();
+    if (w->windowState() & Qt::WindowMinimized) {
+      w->showNormal();
+    }
+  }
+}
+
 int main(int argc, char * argv[])
 {
   QGuiApplication app(argc, argv);
@@ -34,6 +46,7 @@ int main(int argc, char * argv[])
   engine.rootContext()->setContextProperty("client", &client);
 
   QObject::connect(&server, SIGNAL(openFile(QUrl const &)), &images, SLOT(load(QUrl const &)));
+  QObject::connect(&server, &IPCServer::openFile, &moveToForeground);
 
   bool fileOpened = false;
   for (int i = 1; i < app.arguments().count(); ++i) {
