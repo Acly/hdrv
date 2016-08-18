@@ -41,7 +41,7 @@ ApplicationWindow {
           Layout.preferredWidth: 30
           Layout.preferredHeight: 20
           Layout.alignment: Qt.AlignBottom
-          iconSource: 'qrc:/hdrv/media/Save.png'
+          iconSource: 'qrc:/hdrv/media/SingleInstance.png'
           style: ButtonStyle {
             background: Item {
               Rectangle {
