@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QCoreApplication>
+#include <QSettings>
 
 #ifdef WIN32
 # include <windows.h>
@@ -15,6 +16,10 @@ namespace hdrv {
 Settings::Settings(QObject * parent)
   : QObject(parent)
 {
+  QCoreApplication::setOrganizationName("hdrv");
+  QCoreApplication::setApplicationName("hdrv");
+  QSettings::setDefaultFormat(QSettings::IniFormat);
+
 #ifdef WIN32
   QFileInfo thumbDll(QDir(QCoreApplication::applicationDirPath()), "thumbnails.dll");
   thumbnailsAvailable_ = thumbDll.exists();
@@ -45,6 +50,20 @@ void Settings::install()
 void Settings::uninstall()
 {
   registerDll(thumbnailDllPath_.toStdString(), true);
+}
+
+bool Settings::singleInstance() const
+{
+  QSettings settings;
+  return settings.value("Startup/SingleInstance").toBool();
+}
+
+void Settings::setSingleInstance(bool singleInstance)
+{
+  QSettings settings;
+  settings.setValue("Startup/SingleInstance", QVariant(singleInstance));
+
+  emit singleInstanceChanged(singleInstance);
 }
 
 }

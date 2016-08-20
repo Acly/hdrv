@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += qml quick concurrent
+QT += qml quick concurrent network
 CONFIG += qt
 CONFIG += c++14
 
@@ -29,7 +29,9 @@ HEADERS += image/Image.hpp \
            model/ImageDocument.hpp \
            model/Settings.hpp \
            view/ImageArea.hpp \
-           view/ImageRenderer.hpp
+           view/ImageRenderer.hpp \
+           view/IPCServer.hpp \
+           view/IPCClient.hpp
 
 SOURCES += Main.cpp \
            image/Image.cpp \
@@ -37,7 +39,9 @@ SOURCES += Main.cpp \
            model/ImageDocument.cpp \
            model/Settings.cpp \
            view/ImageArea.cpp \
-           view/ImageRenderer.cpp
+           view/ImageRenderer.cpp \
+           view/IPCServer.cpp \
+           view/IPCClient.cpp
 
 RESOURCES += viewer.qrc
 
