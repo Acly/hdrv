@@ -184,6 +184,8 @@ void ImageDocument::store(QUrl const& url)
     check(image()->storePIC(file.absoluteFilePath().toStdString()), ErrorCategory::Generic);
   } else if (file.suffix() == "pfm" || file.suffix() == "ppm") {
     check(image()->storePFM(file.absoluteFilePath().toStdString()), ErrorCategory::Generic);
+  } else if (file.suffix() == "exr") {
+    check(image()->storeEXR(file.absoluteFilePath().toStdString()), ErrorCategory::Generic);
   } else {
     setError("Unsupported file extension: " + file.suffix(), ErrorCategory::Generic);
   }

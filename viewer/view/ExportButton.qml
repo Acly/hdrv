@@ -77,12 +77,29 @@ Rectangle {
       }
       style: subButtonStyle
     }
+    
+    Rectangle {
+      width: 1
+      Layout.fillHeight: true
+      color: '#888'
+    }
+    
+    Button {
+      id: exportEXRButton
+      text: 'EXR'
+      enabled: exportable
+      onClicked: {
+        storeImageDialog.selectedNameFilter = 'OpenEXR image (*.exr)'
+        storeImageDialog.open()
+      }
+      style: subButtonStyle
+    }
 
     FileDialog {
       id: storeImageDialog
       title: 'Choose a filename'
       folder: images.current.directory
-      nameFilters: [ 'Radiance HDR (*.hdr)', 'PFM image (*.pfm)' ]
+      nameFilters: [ 'Radiance HDR (*.hdr)', 'PFM image (*.pfm)', 'OpenEXR image (*.exr)' ]
       selectExisting: false
       onAccepted: images.current.store(storeImageDialog.fileUrl);
     }

@@ -281,6 +281,30 @@ Result<Image> Image::loadEXR(std::string const& path)
   return loadEXRFile(path.c_str());
 }
 
+Result<bool> Image::storeEXR(std::string const& path) const
+{
+  try {
+    Imf::RgbaOutputFile file(path.c_str(), width(), height(), Imf::WRITE_RGBA);
+
+    std::unique_ptr<Imf::Rgba[]> scanline(new Imf::Rgba[width()]);
+    for (int y = 0; y < height(); ++y) {
+      for (int x = 0; x < width(); ++x) {
+        auto & p = scanline[x];
+        p.r = half(value(x, y, 0));
+        p.g = channels() > 1 ? half(value(x, y, 1)) : p.r;
+        p.b = channels() > 2 ? half(value(x, y, 2)) : p.r;
+        p.a = channels() > 3 ? half(value(x, y, 3)) : half(1.0f);
+      }
+      file.setFrameBuffer(scanline.get(), 1, 0);
+      file.writePixels();
+    }
+    return Result<bool>(true);
+
+  } catch (std::exception const& e) {
+    return Result<bool>(std::string("OpenEXR export failed: ") + e.what());
+  }
+}
+
 // Qt LDR Image
 
 Result<Image> Image::loadImage(std::string const& path)
