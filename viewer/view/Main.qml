@@ -48,7 +48,7 @@ ApplicationWindow {
                 anchors.fill: parent
                 anchors.rightMargin: 4
                 anchors.leftMargin: 4
-                color: server.running || control.hovered ? '#FAFAFA' : '#C0C0C0'
+                color: server.running || control.hovered ? '#D9D9FA' : '#C0C0C0'
               }
             }
           }
