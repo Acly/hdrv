@@ -238,9 +238,11 @@ Result<bool> Image::storePIC(std::string const& path) const
 
 // ILM OpenEXR
 
-Result<Image> loadEXR(Imf::RgbaInputFile &&file)
+template<typename Source>
+Result<Image> loadEXRFile(Source && source)
 {
   try {
+    Imf::RgbaInputFile file(std::forward<Source>(source));
     auto dw = file.dataWindow();
     int w = dw.max.x - dw.min.x + 1;
     int h = dw.max.y - dw.min.y + 1;
@@ -264,20 +266,19 @@ Result<Image> loadEXR(Imf::RgbaInputFile &&file)
     }
     return Result<Image>(Image(w, h, c, Image::Float, std::move(data)));
 
-  }
-  catch (std::exception const& e) {
+  } catch (std::exception const& e) {
     return Result<Image>(std::string("OpenEXR loader: ") + e.what());
   }
 }
 
 Result<Image> Image::loadEXR(Imf::IStream & stream)
 {
-  return hdrv::loadEXR(Imf::RgbaInputFile(stream));
+  return loadEXRFile(stream);
 }
 
 Result<Image> Image::loadEXR(std::string const& path)
 {
-  return hdrv::loadEXR(Imf::RgbaInputFile(path.c_str()));
+  return loadEXRFile(path.c_str());
 }
 
 // Qt LDR Image
