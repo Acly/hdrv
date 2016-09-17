@@ -2,6 +2,7 @@
 
 #include <QFile>
 #include <QTextStream>
+#include <cmath>
 
 float const vertexData[] = {-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
 
