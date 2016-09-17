@@ -30,7 +30,7 @@ Rectangle {
 
     Text { text: 'Zoom:' }
     TextField {
-      id: 'scaleText'
+      id: scaleText
       Layout.columnSpan: 2
       validator: DoubleValidator {
         notation: DoubleValidator.StandardNotation
@@ -50,7 +50,7 @@ Rectangle {
 
     Text { text: 'Brightness:' }
     Slider {
-      id: 'brightnessSlider'
+      id: brightnessSlider
       Layout.fillWidth: true
       Layout.minimumHeight: scaleText.height
       minimumValue: images.current.minBrightness
@@ -71,7 +71,7 @@ Rectangle {
 
     Text { text: 'Gamma:'; visible: images.current.isFloat }
     Slider {
-      id: 'gammaSlider'
+      id: gammaSlider
       Layout.fillWidth: true
       Layout.minimumHeight: scaleText.height
       minimumValue: images.current.minGamma
