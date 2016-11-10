@@ -15,10 +15,11 @@ std::shared_ptr<Image> createDefaultImage()
 }
 
 QUrl defaultUrl() { return QUrl("file:////HDRV"); }
+QString nameFromUrl(QUrl const& url) { return QFileInfo(url.fileName()).completeBaseName(); }
 
 ImageDocument::ImageDocument(QUrl const& url, QObject * parent)
   : QObject(parent)
-  , name_(QFileInfo(url.fileName()).baseName())
+  , name_(nameFromUrl(url))
   , url_(url)
   , image_(createDefaultImage())
 {
@@ -28,7 +29,7 @@ ImageDocument::ImageDocument(QUrl const& url, QObject * parent)
 
 ImageDocument::ImageDocument(QUrl const& base, QUrl const& comparison, QObject * parent)
   : QObject(parent)
-  , name_(QFileInfo(base.fileName()).baseName() + " | " + QFileInfo(comparison.fileName()).baseName())
+  , name_(nameFromUrl(base) + " | " + nameFromUrl(comparison))
   , url_(base)
   , comparisonUrl_(comparison)
   , image_(createDefaultImage())
