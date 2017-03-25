@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cctype>
 #include <cstring>
+#include <string>
 #include <sstream>
 
 #ifdef PIC_DEBUG
@@ -15,29 +16,15 @@ void pic::pic_input_file::read_information_header(format_type& format, double& e
   line_number_ = 0;
 
   // magic
-  const std::size_t magic_size = 10;
-  char magic[magic_size];
-  istream_.read(magic, magic_size);
+  std::string header;
+  std::getline(istream_, header);
   if (!istream_) {
     throw pic::runtime_error(std::string("pic: error: ") + __FUNCTION__);
   }
   ++line_number_;
-  if (!istream_ || strncmp(magic, "#?RADIANCE", magic_size)) {
-    #ifdef PIC_DEBUG
-      std::cerr << "pic: " << line_number_ << ": " << "error" << std::endl;
-    #endif
-    throw pic::runtime_error(std::string("pic: error: ") + __FUNCTION__);
+  if (!(header == "#?RADIANCE" || header == "#?RGBE")) {
+    throw pic::runtime_error(std::string("pic: invalid header token: ") + header);
   }
-  istream_.ignore(1);
-  if (!istream_) {
-    #ifdef PIC_DEBUG
-      std::cerr << "pic: " << line_number_ << ": " << "error" << std::endl;
-    #endif
-    throw pic::runtime_error(std::string("pic: error: ") + __FUNCTION__);
-  }
-  #ifdef PIC_DEBUG
-    std::cerr << "pic: " << line_number_ << ": " << "info: " << magic << std::endl;
-  #endif
 
   std::size_t number_of_format_lines = 0;
   double cumulative_exposure = 1.0;
