@@ -7,7 +7,7 @@ GUI which displays HDR images, no bullshit.
 ## Features
 
 * Opens popular HDR image formats: Radiance PIC (_*.pic, *.hdr_), PFM (_*.pfm, *.ppm_), OpenEXR (_*.exr_)
-* Exports images in Radiance PIC or PFM format
+* Exports images in Radiance PIC, PFM or OpenEXR format
 * Fast zoom, pan and brightness control
 * Manage multiple image documents in tabs
 * Compare opened images (absolute difference or side-by-side)
