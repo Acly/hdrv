@@ -306,10 +306,10 @@ void pic::pic_input_file::read_scanline(pixel* scanline, std::size_t length)
       throw pic::runtime_error(std::string("pic: error: ") + __FUNCTION__);
     }
     if ((header[0] != 2) || (header[1] != 2)) {
-      #ifdef PIC_DEBUG
-        std::cerr << istream_.tellg() << ": " << "error: " << std::endl;
-      #endif
-      throw pic::runtime_error(std::string("pic: error: ") + __FUNCTION__);
+        // Uncompressed format (not run-length encoded)
+        memcpy(scanline, header, sizeof(pixel));
+        istream_.read(reinterpret_cast<char*>(&scanline[1]), (length - 1) * sizeof(pixel));
+        return;
     }
     std::size_t scanline_length = (header[2] << 8) | header[3];
     if (scanline_length != length) {
