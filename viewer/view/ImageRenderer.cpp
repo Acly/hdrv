@@ -153,6 +153,7 @@ void ImageRenderer::paint()
   program_->setUniformValue("regionSize", regionSize);
   program_->setUniformValue("brightness", std::pow(2.0f, settings_.brightness));
   program_->setUniformValue("gamma", current_->format() == Image::Float ? 1.0f / settings_.gamma : 1.0f);
+  program_->setUniformValue("alphaMode", (int)settings_.alphaMode);
   if (comparison_) {
     textures_[comparison_->image]->bind(1);
     program_->setUniformValue("comparison", 1);

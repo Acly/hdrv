@@ -23,6 +23,8 @@ ImageDocument::ImageDocument(QUrl const& url, QObject * parent)
   , url_(url)
   , image_(createDefaultImage())
 {
+  init();
+
   watcher_ = setupWatcher(url_, false);
   load(url_.toLocalFile(), watcher_);
 }
@@ -34,6 +36,8 @@ ImageDocument::ImageDocument(QUrl const& base, QUrl const& comparison, QObject *
   , comparisonUrl_(comparison)
   , image_(createDefaultImage())
 {
+  init();
+
   watcher_ = setupWatcher(url_, false);
   comparisonWatcher_ = setupWatcher(comparisonUrl_, true);
 
@@ -45,7 +49,15 @@ ImageDocument::ImageDocument(QObject * parent)
   : QObject(parent)
   , url_(defaultUrl())
   , image_(createDefaultImage())
-{}
+{
+  init();
+}
+
+void ImageDocument::init()
+{
+  QSettings settings;
+  alphaMode_ = (AlphaMode)settings.value("Rendering/AlphaMode").toInt();
+}
 
 QFutureWatcher<ImageDocument::LoadResult>* ImageDocument::setupWatcher(QUrl const& url, bool comparison)
 {
@@ -147,6 +159,19 @@ void ImageDocument::setGamma(qreal gamma)
   if (!qFuzzyCompare(gamma_, gamma) && gamma >= minGamma() && gamma <= maxGamma()) {
     gamma_ = gamma;
     emit gammaChanged();
+    emit propertyChanged();
+  }
+}
+
+void ImageDocument::setAlphaMode(AlphaMode alphaMode)
+{
+  if (alphaMode_ != alphaMode) {
+    alphaMode_ = alphaMode;
+
+    QSettings settings;
+    settings.setValue("Rendering/AlphaMode", QVariant((int)alphaMode));
+
+    emit alphaModeChanged();
     emit propertyChanged();
   }
 }

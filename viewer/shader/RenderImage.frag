@@ -8,6 +8,7 @@ uniform vec2 scale;
 uniform vec2 regionSize;
 uniform float gamma;
 uniform float brightness;
+uniform int alphaMode;
 uniform int mode;
 uniform float separator;
 
@@ -33,7 +34,17 @@ void main()
     }
 
     vec3 color = pow(brightness * texel.xyz, vec3(gamma));
-    gl_FragColor = vec4(mix(checker, color.xyz, texel.w), 1.0);
+    switch(alphaMode) {
+      case 1: // No Alpha
+        gl_FragColor = vec4(color.xyz, 1.0);
+        break;
+      case 2: // Alpha Only
+        gl_FragColor = vec4(vec3(texel.w), 1.0);
+        break;
+      default: // Default
+        gl_FragColor = vec4(mix(checker, color.xyz, texel.w), 1.0);
+        break;
+    }
   } else {
     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
   }
