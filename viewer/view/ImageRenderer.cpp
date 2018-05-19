@@ -90,7 +90,8 @@ std::unique_ptr<QOpenGLTexture> createTexture(Image const& image)
 QVector2D texturePosition(QVector2D regionSize, QVector2D imageSize, QVector2D imagePosition)
 {
   auto offset = (regionSize - imageSize) / 2.0f;
-  return (offset + QVector2D(-imagePosition.x(), imagePosition.y())) / regionSize;
+  auto roffset = QVector2D(std::floor(offset.x()), std::floor(offset.y()));
+  return (roffset + QVector2D(-imagePosition.x(), imagePosition.y())) / regionSize;
 }
 
 QVector2D textureScale(QVector2D regionSize, QVector2D imageSize)
