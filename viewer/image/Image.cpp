@@ -305,6 +305,27 @@ Result<bool> Image::storeEXR(std::string const& path) const
   }
 }
 
+Result<bool> Image::storeImage(std::string const& path, float brightness, float gamma) const
+{
+  if (channels() == 2 || channels() > 4) return Result<bool>("Unsupported number of channels.");
+
+  auto format = channels() == 1 ? QImage::Format_Mono :
+    (channels() == 3 ? QImage::Format_RGB888 : QImage::Format_ARGB32);
+
+  QImage img(width(), height(), format);
+  for (int y = 0; y < height(); ++y) {
+    for (int x = 0; x < width(); ++x) {
+      auto p = img.bits() + channels()*(y*width() + x);
+      for (int c = 0; c < channels(); ++c) {
+        p[c] = std::max(std::min(std::pow(brightness * value(x, y, c), gamma), 1.0f), 0.0f) * 255.0f;
+      }
+    }
+  }
+  img.save(path.c_str());
+
+  return Result<bool>(true);
+}
+
 // Qt LDR Image
 
 Result<Image> Image::loadImage(std::string const& path)

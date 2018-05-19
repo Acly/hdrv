@@ -19,7 +19,7 @@ Rectangle {
   property Component subButtonStyle: Component {
     ButtonStyle {
       background: Rectangle {
-        implicitWidth: 45
+        implicitWidth: 40
         border.color: control.pressed ? '#888' : 'transparent'
         gradient: Gradient {
           GradientStop { position: 0; color: control.pressed ? '#ddd' : 'transparent' }
@@ -95,11 +95,28 @@ Rectangle {
       style: subButtonStyle
     }
 
+    Rectangle {
+      width: 1
+      Layout.fillHeight: true
+      color: '#888'
+    }
+
+    Button {
+      id: exportPNGButton
+      text: 'PNG'
+      enabled: exportable
+      onClicked: {
+        storeImageDialog.selectedNameFilter = 'PNG image (*.png)'
+        storeImageDialog.open()
+      }
+      style: subButtonStyle
+    }
+
     FileDialog {
       id: storeImageDialog
       title: 'Choose a filename'
       folder: images.current.directory
-      nameFilters: [ 'Radiance HDR (*.hdr)', 'PFM image (*.pfm)', 'OpenEXR image (*.exr)' ]
+      nameFilters: [ 'Radiance HDR (*.hdr)', 'PFM image (*.pfm)', 'OpenEXR image (*.exr)', 'PNG image (*.png)' ]
       selectExisting: false
       onAccepted: images.current.store(storeImageDialog.fileUrl);
     }

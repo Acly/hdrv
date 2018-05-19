@@ -212,6 +212,8 @@ void ImageDocument::store(QUrl const& url)
     check(image()->storePFM(file.absoluteFilePath().toStdString()), ErrorCategory::Generic);
   } else if (file.suffix() == "exr") {
     check(image()->storeEXR(file.absoluteFilePath().toStdString()), ErrorCategory::Generic);
+  } else if (file.suffix() == "png") {
+    check(image()->storeImage(file.absoluteFilePath().toStdString(), pow(2.0f, brightness()), 1.0f / gamma()), ErrorCategory::Generic);
   } else {
     setError("Unsupported file extension: " + file.suffix(), ErrorCategory::Generic);
   }
