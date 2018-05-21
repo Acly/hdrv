@@ -95,9 +95,9 @@ IFACEMETHODIMP ThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
   // Load the image from the stream
   switch (imageExtension_)
   {
-  case ImageExtension::EXR: img = hdrv::Image::loadEXR(IStreamExr(stream_)); break;
-  case ImageExtension::PFM: img = hdrv::Image::loadPFM(IStreamStream(stream_)); break;
-  case ImageExtension::PIC: img = hdrv::Image::loadPIC(IStreamStream(stream_)); break;
+  case ImageExtension::EXR: { IStreamExr s(stream_); img = hdrv::Image::loadEXR(s); break; }
+  case ImageExtension::PFM: { IStreamStream s(stream_); img = hdrv::Image::loadPFM(s); break; }
+  case ImageExtension::PIC: { IStreamStream s(stream_); img = hdrv::Image::loadPIC(s); break; }
   }
   if (!img)
   {

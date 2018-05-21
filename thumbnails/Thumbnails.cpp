@@ -68,7 +68,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
 {
   HRESULT hr = CLASS_E_CLASSNOTAVAILABLE;
 
-  auto &extProviderIt = std::find_if(supportedExtensions.cbegin(), supportedExtensions.cend(), [&rclsid](ExtensionProvider const &provider)->bool {
+  auto extProviderIt = std::find_if(supportedExtensions.cbegin(), supportedExtensions.cend(), [&rclsid](ExtensionProvider const &provider)->bool {
     return IsEqualCLSID(provider.clsid, rclsid) == TRUE;
   });
 
