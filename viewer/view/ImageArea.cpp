@@ -1,5 +1,7 @@
 #include <view/ImageArea.hpp>
 
+#include <cmath>
+
 namespace hdrv {
 
 ImageArea::ImageArea()
@@ -56,7 +58,7 @@ void ImageArea::sync()
     renderer_->setClearColor(color_);
     renderer_->updateImages(images_->vector());
     renderer_->setCurrent(img.image());
-    renderer_->setSettings({ QVector2D(img.position()), img.scale(), (float)img.brightness(), (float)img.gamma() });
+    renderer_->setSettings({ QVector2D(img.position()), img.scale(), (float)img.brightness(), (float)img.gamma(), img.alphaMode() });
     renderer_->setComparison(img.comparison());
   }
 }
@@ -79,18 +81,18 @@ void ImageArea::reposition(ImageDocument & img)
     newPos.setX(0);
   } else {
     if (bounds.left() > 0) {
-      newPos.setX(wsize.width() / 2 - bounds.width() / 2);
+      newPos.setX(std::floor(wsize.width() / 2 - bounds.width() / 2));
     } else if (bounds.right() < wsize.width()) {
-      newPos.setX(-wsize.width() / 2 + bounds.width() / 2);
+      newPos.setX(std::floor(-wsize.width() / 2 + bounds.width() / 2));
     }
   }
   if (bounds.height() <= height()) {
     newPos.setY(0);
   } else {
     if (bounds.top() > 0) {
-      newPos.setY(wsize.height() / 2 - bounds.height() / 2);
+      newPos.setY(std::floor(wsize.height() / 2 - bounds.height() / 2));
     } else if (bounds.bottom() < wsize.height()) {
-      newPos.setY(-wsize.height() / 2 + bounds.height() / 2);
+      newPos.setY(std::floor(-wsize.height() / 2 + bounds.height() / 2));
     }
   }
 
@@ -150,7 +152,9 @@ void ImageArea::wheelEvent(QWheelEvent * event)
     auto & img = *images_->current();
     auto bounds = imageBounds(img);
     if (bounds.contains(event->posF())) {
-      QPointF pos = (event->posF() - bounds.center());
+      int cx = bounds.center().x();
+      int cy = bounds.center().y();
+      QPointF pos = (event->posF() - QPointF(cx, cy));
       QPointF newPos = mul * pos;
 
       img.move(newPos - pos);

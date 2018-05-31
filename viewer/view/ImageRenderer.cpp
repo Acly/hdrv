@@ -90,7 +90,8 @@ std::unique_ptr<QOpenGLTexture> createTexture(Image const& image)
 QVector2D texturePosition(QVector2D regionSize, QVector2D imageSize, QVector2D imagePosition)
 {
   auto offset = (regionSize - imageSize) / 2.0f;
-  return (offset + QVector2D(-imagePosition.x(), imagePosition.y())) / regionSize;
+  auto roffset = QVector2D(std::floor(offset.x()), std::floor(offset.y()));
+  return (roffset + QVector2D(-imagePosition.x(), imagePosition.y())) / regionSize;
 }
 
 QVector2D textureScale(QVector2D regionSize, QVector2D imageSize)
@@ -152,6 +153,7 @@ void ImageRenderer::paint()
   program_->setUniformValue("regionSize", regionSize);
   program_->setUniformValue("brightness", std::pow(2.0f, settings_.brightness));
   program_->setUniformValue("gamma", current_->format() == Image::Float ? 1.0f / settings_.gamma : 1.0f);
+  program_->setUniformValue("alphaMode", (int)settings_.alphaMode);
   if (comparison_) {
     textures_[comparison_->image]->bind(1);
     program_->setUniformValue("comparison", 1);

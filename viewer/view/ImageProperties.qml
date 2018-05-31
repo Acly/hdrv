@@ -92,6 +92,15 @@ Rectangle {
       visible: images.current.isFloat
     }
 
+    Text { text: 'Alpha Mode:' }
+    ComboBox {
+      id: 'alphaModeSelection'
+      Layout.fillWidth: true
+      model: [ "Default", "No Alpha", "Alpha Only" ]
+      onCurrentIndexChanged: images.current.alphaMode = currentIndex;
+      currentIndex: images.current.alphaMode
+    }
+
     Text {
       text: '<b>Comparison</b>'
       Layout.columnSpan: 3

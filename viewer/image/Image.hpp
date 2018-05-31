@@ -54,6 +54,7 @@ public:
   Result<bool> storePFM(std::string const& path) const;
   Result<bool> storePIC(std::string const& path) const;
   Result<bool> storeEXR(std::string const& path) const;
+  Result<bool> storeImage(std::string const& path, float brightness, float gamma) const;
 
   Result<Image> scaleByHalf() const;
 
