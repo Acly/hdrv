@@ -1,7 +1,7 @@
+/*
+
 #pragma once
 
-#include <boost/iostreams/stream.hpp>
-#include <OpenEXR/ImfIO.h>
 #include <windows.h>
 
 class IStreamDevice
@@ -122,3 +122,5 @@ private:
   size_t currentPos_;
   size_t streamSize_;
 };
+
+*/

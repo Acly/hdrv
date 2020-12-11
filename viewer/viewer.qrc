@@ -2,7 +2,7 @@
   <qresource prefix="/hdrv">
     <file>view/ExportButton.qml</file>
     <file>view/Main.qml</file>
-    <file>view/TabBar.qml</file>
+    <file>view/TabNav.qml</file>
     <file>view/ImageProperties.qml</file>
     <file>view/AppSettings.qml</file>
     <file>shader/RenderImage.vert</file>

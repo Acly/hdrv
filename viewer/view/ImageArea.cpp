@@ -7,7 +7,7 @@ namespace hdrv {
 ImageArea::ImageArea()
   : images_(nullptr)
 {
-  connect(this, SIGNAL(windowChanged(QQuickWindow*)), this, SLOT(handleWindowChanged(QQuickWindow*)));
+  connect(this, &QQuickItem::windowChanged, this, &ImageArea::handleWindowChanged);
   setAcceptedMouseButtons(Qt::AllButtons);
   setAcceptHoverEvents(true);
 }
@@ -19,8 +19,8 @@ void ImageArea::setModel(ImageCollection * images)
       disconnect(images_, 0, this, 0);
     }
     images_ = images;
-    connect(images_, SIGNAL(itemsChanged()),this, SLOT(connectImages()));
-    connect(images_, SIGNAL(currentChanged()), window(), SLOT(update()));
+    connect(images_, &ImageCollection::itemsChanged,this, &ImageArea::connectImages);
+    connect(images_, &ImageCollection::currentChanged, window(), &QQuickWindow::update);
     connectImages();
     emit modelChanged();
   }
@@ -49,7 +49,8 @@ void ImageArea::sync()
   if (images_) {
     if (!renderer_) {
       renderer_ = std::make_unique<ImageRenderer>();
-      connect(window(), SIGNAL(beforeRendering()), renderer_.get(), SLOT(paint()), Qt::DirectConnection);
+      connect(window(), &QQuickWindow::beforeRendering, renderer_.get(), &ImageRenderer::init, Qt::DirectConnection);
+      connect(window(), &QQuickWindow::beforeRenderPassRecording, renderer_.get(), &ImageRenderer::paint, Qt::DirectConnection);
     }
     auto & img = *images_->current();
     auto pos = mapToItem(nullptr, position());
@@ -60,6 +61,7 @@ void ImageArea::sync()
     renderer_->setCurrent(img.image());
     renderer_->setSettings({ QVector2D(img.position()), img.scale(), (float)img.brightness(), (float)img.gamma(), img.alphaMode() });
     renderer_->setComparison(img.comparison());
+    renderer_->setWindow(window());
   }
 }
 
@@ -114,12 +116,12 @@ void ImageArea::mousePressEvent(QMouseEvent * event)
 
   if (event->button() == Qt::MouseButton::LeftButton) {
     setCursor(Qt::ClosedHandCursor);
-    mousePosition_ = event->localPos();
+    mousePosition_ = event->position();
   } else if (event->button() == Qt::MouseButton::RightButton && images_) {
     auto & img = *images_->current();
     img.setComparisonMode(ComparisonMode::SideBySide);
     setCursor(Qt::SplitHCursor);
-    updateComparisonSeparator(*images_->current(), event->localPos());
+    updateComparisonSeparator(*images_->current(), event->position());
   }
 }
 
@@ -134,12 +136,12 @@ void ImageArea::mouseMoveEvent(QMouseEvent * event)
     auto & img = *images_->current();
 
     if (event->buttons() & Qt::MouseButton::LeftButton) {
-      img.move(mousePosition_ - event->localPos());
-      mousePosition_ = event->localPos();
+      img.move(mousePosition_ - event->position());
+      mousePosition_ = event->position();
       reposition(img);
     }
     if (event->buttons() & Qt::MouseButton::RightButton) {
-      updateComparisonSeparator(img, event->localPos());
+      updateComparisonSeparator(img, event->position());
     }
   }
 }
@@ -151,10 +153,10 @@ void ImageArea::wheelEvent(QWheelEvent * event)
 
     auto & img = *images_->current();
     auto bounds = imageBounds(img);
-    if (bounds.contains(event->posF())) {
+    if (bounds.contains(event->position())) {
       int cx = bounds.center().x();
       int cy = bounds.center().y();
-      QPointF pos = (event->posF() - QPointF(cx, cy));
+      QPointF pos = (event->position() - QPointF(cx, cy));
       QPointF newPos = mul * pos;
 
       img.move(newPos - pos);
@@ -172,35 +174,51 @@ void ImageArea::hoverMoveEvent(QHoverEvent * event)
   if (images_ && images_->current()) {
     auto & img = *images_->current();
 	const auto & bounds = imageBounds(img);
-    if (bounds.contains(event->posF())) {
-      QPointF positionOnImage = (event->posF() - bounds.topLeft()) / img.scale();
+    if (bounds.contains(event->position())) {
+      QPointF positionOnImage = (event->position() - bounds.topLeft()) / img.scale();
       images_->current()->setCurrentPixel(QPoint(positionOnImage.x(), positionOnImage.y()));
     }
   }
 }
 
-void ImageArea::geometryChanged(const QRectF & newGeometry, const QRectF & oldGeometry)
+void ImageArea::geometryChange(const QRectF & newGeometry, const QRectF & oldGeometry)
 {
   if (images_) {
     reposition(*images_->current());
   }
-  QQuickItem::geometryChanged(newGeometry, oldGeometry);
+  QQuickItem::geometryChange(newGeometry, oldGeometry);
 }
 
 void ImageArea::handleWindowChanged(QQuickWindow * window)
 {
   if (window) {
-    connect(window, SIGNAL(beforeSynchronizing()), this, SLOT(sync()), Qt::DirectConnection);
-    connect(window, SIGNAL(sceneGraphInvalidated()), this, SLOT(cleanup()), Qt::DirectConnection);
-    window->setClearBeforeRendering(false);
+    connect(window, &QQuickWindow::beforeSynchronizing, this, &ImageArea::sync, Qt::DirectConnection);
+    connect(window, &QQuickWindow::sceneGraphInvalidated, this, &ImageArea::cleanup, Qt::DirectConnection);
   }
 }
 
 void ImageArea::connectImages()
 {
   for (auto image : images_->vector()) {
-    connect(image, SIGNAL(propertyChanged()), window(), SLOT(update()), Qt::UniqueConnection);
+    connect(image, &ImageDocument::propertyChanged, window(), &QQuickWindow::update, Qt::UniqueConnection);
   }
+}
+
+void ImageArea::cleanup()
+{
+  renderer_ = nullptr;
+}
+
+struct CleanupJob : public QRunnable
+{
+  std::unique_ptr<ImageRenderer> renderer;
+  CleanupJob(std::unique_ptr<ImageRenderer>&& r) : renderer(std::move(r)) {}
+  void run() override { renderer.reset(); }
+};
+
+void ImageArea::releaseResources()
+{
+  window()->scheduleRenderJob(new CleanupJob(std::move(renderer_)), QQuickWindow::BeforeSynchronizingStage);
 }
 
 }

@@ -2,7 +2,11 @@
 
 #include <QFile>
 #include <QTextStream>
+#include <QQuickWindow>
+#include <QSGRendererInterface>
+
 #include <cmath>
+#include <iostream>
 
 float const vertexData[] = {-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
 
@@ -14,14 +18,16 @@ QString readFile(QString const& name)
     return "";
   }
   QTextStream stream(&file);
-  return stream.readAll();
+  QString result = stream.readAll();
+  qDebug(qUtf8Printable(result));
+  return result;
 }
 
 std::unique_ptr<QOpenGLShaderProgram> createProgram()
 {
   auto program = std::make_unique<QOpenGLShaderProgram>();
-  program->addShaderFromSourceCode(QOpenGLShader::Vertex, readFile(":/hdrv/shader/RenderImage.vert"));
-  program->addShaderFromSourceCode(QOpenGLShader::Fragment, readFile(":/hdrv/shader/RenderImage.frag"));
+  program->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex, readFile(":/hdrv/shader/RenderImage.vert"));
+  program->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, readFile(":/hdrv/shader/RenderImage.frag"));
   program->bindAttributeLocation("vertices", 0);
   program->link();
   return program;
@@ -128,15 +134,26 @@ void ImageRenderer::updateImages(std::vector<ImageDocument *> const& images)
   }
 }
 
-void ImageRenderer::paint()
+void ImageRenderer::init()
 {
   if (!program_) {
+    QSGRendererInterface* rif = window_->rendererInterface();
+    Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::OpenGL || rif->graphicsApi() == QSGRendererInterface::OpenGLRhi);
+
     initializeOpenGLFunctions();
     program_ = createProgram();
   }
 
+}
+
+void ImageRenderer::paint()
+{
+  window_->beginExternalCommands();
+
   program_->bind();
   program_->enableAttributeArray(0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
   program_->setAttributeArray(0, GL_FLOAT, vertexData, 2);
 
   auto const& region = renderRegion_;
@@ -166,14 +183,18 @@ void ImageRenderer::paint()
   glViewport(region.offset.x(), region.offset.y(), region.size.width(), region.size.height());
 
   glDisable(GL_DEPTH_TEST);
-  glClearColor(clearColor_.red(), clearColor_.green(), clearColor_.blue(), 1.0f);
+  glClearColor(clearColor_.redF(), clearColor_.greenF(), clearColor_.blueF(), 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
   texture.release(0);
   program_->disableAttributeArray(0);
   program_->release();
+
+  window_->endExternalCommands();
 }
 
 }

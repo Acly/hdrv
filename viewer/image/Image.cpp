@@ -8,8 +8,15 @@
 #include <pic/pic_input_file.hpp>
 #include <pic/pic_output_file.hpp>
 
-#include <OpenEXR/ImfRgbaFile.h>
-#include <OpenEXR/ImfArray.h>
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4018)
+#endif
+#define TINYEXR_IMPLEMENTATION
+#include <tinyexr.h>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #include <QImage>
 
@@ -26,7 +33,7 @@ Image::Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data)
 Image Image::makeEmpty()
 {
   std::vector<uint8_t> data(1, 0);
-  return Image(0, 0, 1, Byte, std::move(data));
+  return Image(1, 1, 1, Byte, std::move(data));
 }
 
 float Image::value(int x, int y, int channel) const
@@ -238,42 +245,37 @@ Result<bool> Image::storePIC(std::string const& path) const
 
 // ILM OpenEXR
 
+#define EXR_CHECK(ret) \
+  if (ret != TINYEXR_SUCCESS) { \
+    if (err) { \
+      std::string message(err); \
+      FreeEXRErrorMessage(err); \
+      return Result<Image>(message); \
+    } \
+  }
+
 template<typename Source>
 Result<Image> loadEXRFile(Source && source)
 {
-  try {
-    Imf::RgbaInputFile file(std::forward<Source>(source));
-    auto dw = file.dataWindow();
-    int w = dw.max.x - dw.min.x + 1;
-    int h = dw.max.y - dw.min.y + 1;
-    int c = 4;
+  float* pixels = nullptr;
+  int width, height;
+  char const* err = nullptr;
+  EXR_CHECK(LoadEXRWithLayer(&pixels, &width, &height, source, nullptr, &err));
 
-    std::vector<uint8_t> data(w * h * c * sizeof(float));
-    float * d = reinterpret_cast<float *>(data.data());
-
-    Imf::Array2D<Imf::Rgba> pixels(1, w);
-    for (int y = 0; y < h; ++y, ++dw.min.y) {
-      file.setFrameBuffer(&pixels[0][0] - dw.min.x - dw.min.y * w, 1, w);
-      file.readPixels(dw.min.y);
-      for (int x = 0; x < w; ++x) {
-        auto const& p = pixels[0][x];
-        int index = (h - y - 1) * w * c + x * c; // flip horizontally
-        d[index + 0] = (float)p.r;
-        d[index + 1] = (float)p.g;
-        d[index + 2] = (float)p.b;
-        d[index + 3] = (float)p.a;
-      }
-    }
-    return Result<Image>(Image(w, h, c, Image::Float, std::move(data)));
-
-  } catch (std::exception const& e) {
-    return Result<Image>(std::string("OpenEXR loader: ") + e.what());
+  size_t stride = size_t(width) * 4 * sizeof(float);
+  std::vector<unsigned char> storage(size_t(height) * stride);
+  for (int i = 0; i < height; ++i) {
+    std::memcpy(storage.data() + size_t(height - i - 1) * stride,
+                pixels + i * size_t(width) * 4,
+                stride);
   }
+  return Image(width, height, 4, Image::Float, std::move(storage));
 }
 
-Result<Image> Image::loadEXR(Imf::IStream & stream)
+Result<Image> Image::loadEXR(std::istream& stream)
 {
-  return loadEXRFile(stream);
+  //return loadEXRFile(stream);
+  return Result<Image>(std::string("TODO"));
 }
 
 Result<Image> Image::loadEXR(std::string const& path)
@@ -284,21 +286,7 @@ Result<Image> Image::loadEXR(std::string const& path)
 Result<bool> Image::storeEXR(std::string const& path) const
 {
   try {
-    Imf::RgbaOutputFile file(path.c_str(), width(), height(), Imf::WRITE_RGBA);
-
-    std::unique_ptr<Imf::Rgba[]> scanline(new Imf::Rgba[width()]);
-    for (int y = 0; y < height(); ++y) {
-      for (int x = 0; x < width(); ++x) {
-        auto & p = scanline[x];
-        p.r = half(value(x, y, 0));
-        p.g = channels() > 1 ? half(value(x, y, 1)) : p.r;
-        p.b = channels() > 2 ? half(value(x, y, 2)) : p.r;
-        p.a = channels() > 3 ? half(value(x, y, 3)) : half(1.0f);
-      }
-      file.setFrameBuffer(scanline.get(), 1, 0);
-      file.writePixels();
-    }
-    return Result<bool>(true);
+    return Result<bool>(std::string("TODO"));
 
   } catch (std::exception const& e) {
     return Result<bool>(std::string("OpenEXR export failed: ") + e.what());

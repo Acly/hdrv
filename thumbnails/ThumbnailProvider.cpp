@@ -93,12 +93,17 @@ IFACEMETHODIMP ThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
   hdrv::Result<hdrv::Image> img = hdrv::Result<hdrv::Image>("Unsupported image format");
 
   // Load the image from the stream
+  /*
+  
+  TODO
+  
   switch (imageExtension_)
   {
   case ImageExtension::EXR: { IStreamExr s(stream_); img = hdrv::Image::loadEXR(s); break; }
   case ImageExtension::PFM: { IStreamStream s(stream_); img = hdrv::Image::loadPFM(s); break; }
   case ImageExtension::PIC: { IStreamStream s(stream_); img = hdrv::Image::loadPIC(s); break; }
   }
+  */
   if (!img)
   {
     std::string err = "hdrv.thumbnail error: " + img.error();

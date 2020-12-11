@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
 #include <QObject>
 #include <QSize>
@@ -89,7 +90,7 @@ public:
   QVector4D pixelValue() const;
   bool isDefault() const;
   bool isComparison() const { return (bool)comparison_; }
-  boost::optional<Comparison> const& comparison() const { return comparison_; }
+  std::optional<Comparison> const& comparison() const { return comparison_; }
   ComparisonMode comparisonMode() const { return comparison_.value_or(Comparison()).mode; }
   float comparisonSeparator() const { return comparison_.value_or(Comparison()).separator; }
 
@@ -151,7 +152,7 @@ private:
   QPoint pixelPosition_;
   QVector4D pixelValue_;
   std::shared_ptr<Image> image_;
-  boost::optional<Comparison> comparison_;
+  std::optional<Comparison> comparison_;
   QFutureWatcher<LoadResult>* watcher_ = nullptr;
   QFutureWatcher<LoadResult>* comparisonWatcher_ = nullptr;
 };

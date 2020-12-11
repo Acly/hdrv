@@ -1,8 +1,7 @@
-import QtQuick 2.3
-import QtQuick.Controls 1.2
-import QtQuick.Layouts 1.2
-import QtQuick.Dialogs 1.2
-import QtQuick.Controls.Styles 1.4
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import Qt.labs.platform 1.1
 
 Rectangle {
   border.width: exportButton.activeFocus ? 2 : 1
@@ -16,16 +15,12 @@ Rectangle {
 
   property bool exportable: images.current.isFloat && !images.current.isComparison
 
-  property Component subButtonStyle: Component {
-    ButtonStyle {
-      background: Rectangle {
-        implicitWidth: 40
-        border.color: control.pressed ? '#888' : 'transparent'
-        gradient: Gradient {
-          GradientStop { position: 0; color: control.pressed ? '#ddd' : 'transparent' }
-          GradientStop { position: 1; color: control.pressed ? '#ccc' : 'transparent' }
-        }
-      }
+  property Rectangle subButtonStyle: Rectangle {
+    implicitWidth: 40
+    border.color: control.pressed ? '#888' : 'transparent'
+    gradient: Gradient {
+      GradientStop { position: 0; color: control.pressed ? '#ddd' : 'transparent' }
+      GradientStop { position: 1; color: control.pressed ? '#ccc' : 'transparent' }
     }
   }
 
@@ -39,9 +34,7 @@ Rectangle {
       Layout.fillWidth: true
       enabled: exportable
       onClicked: storeImageDialog.open()
-      style: ButtonStyle {
-        background: Rectangle { color: 'transparent' }
-      }
+      background: Rectangle { color: 'transparent' }
     }
 
     Rectangle {
@@ -58,7 +51,7 @@ Rectangle {
         storeImageDialog.selectedNameFilter = 'Radiance HDR (*.hdr)'
         storeImageDialog.open()
       }
-      style: subButtonStyle
+      background: subButtonStyle
     }
 
     Rectangle {
@@ -75,7 +68,7 @@ Rectangle {
         storeImageDialog.selectedNameFilter = 'PFM image (*.pfm)'
         storeImageDialog.open()
       }
-      style: subButtonStyle
+      background: subButtonStyle
     }
     
     Rectangle {
@@ -92,7 +85,7 @@ Rectangle {
         storeImageDialog.selectedNameFilter = 'OpenEXR image (*.exr)'
         storeImageDialog.open()
       }
-      style: subButtonStyle
+      background: subButtonStyle
     }
 
     Rectangle {
@@ -109,15 +102,15 @@ Rectangle {
         storeImageDialog.selectedNameFilter = 'PNG image (*.png)'
         storeImageDialog.open()
       }
-      style: subButtonStyle
+      background: subButtonStyle
     }
 
     FileDialog {
       id: storeImageDialog
       title: 'Choose a filename'
       folder: images.current.directory
+      fileMode: FileDialog.SaveFile
       nameFilters: [ 'Radiance HDR (*.hdr)', 'PFM image (*.pfm)', 'OpenEXR image (*.exr)', 'PNG image (*.png)' ]
-      selectExisting: false
       onAccepted: images.current.store(storeImageDialog.fileUrl);
     }
   }

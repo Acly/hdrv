@@ -3,9 +3,7 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <boost/optional.hpp>
-
-#include <OpenEXR/ImfIO.h>
+#include <optional>
 
 namespace hdrv {
 
@@ -14,8 +12,8 @@ class Result
 {
 public:
   operator bool() const { return (bool)value_; }
-  T const& value() const& { return value_.get(); }
-  T && value() && { return std::move(value_.get()); }
+  T const& value() const& { return value_.value(); }
+  T && value() && { return std::move(value_.value()); }
   std::string const& error() const { return error_; }
 
   Result(T && v) : value_(std::move(v)) {}
@@ -23,7 +21,7 @@ public:
 
 private:
   std::string error_;
-  boost::optional<T> value_;
+  std::optional<T> value_;
 };
 
 class Image
@@ -38,9 +36,9 @@ public:
   static Result<Image> loadEXR(std::string const& path);
   static Result<Image> loadImage(std::string const& path);
 
-  static Result<Image> loadPFM(std::istream & stream);
-  static Result<Image> loadPIC(std::istream & stream);
-  static Result<Image> loadEXR(Imf::IStream & stream);
+  static Result<Image> loadPFM(std::istream& stream);
+  static Result<Image> loadPIC(std::istream& stream);
+  static Result<Image> loadEXR(std::istream& stream);
 
   int width() const { return width_; }
   int height() const { return height_; }

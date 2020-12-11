@@ -1,9 +1,12 @@
 #include <model/ImageDocument.hpp>
 
+#include <QtConcurrent>
 #include <QDir>
 #include <QFileInfo>
-#include <QtConcurrent>
+#include <QFutureWatcher>
 #include <QFileSystemWatcher>
+#include <QSettings>
+#include <QTimer>
 
 #include <model/ImageCollection.hpp>
 

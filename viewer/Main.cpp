@@ -35,6 +35,8 @@ int main(int argc, char * argv[])
   qmlRegisterType<IPCServer>("Hdrv", 1, 0, "Server");
   qmlRegisterType<IPCClient>("Hdrv", 1, 0, "Client");
 
+  QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+
   Settings settings;
   IPCServer server;
   IPCClient client;

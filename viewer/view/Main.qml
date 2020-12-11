@@ -1,7 +1,6 @@
-import QtQuick 2.5
-import QtQuick.Controls 1.2
-import QtQuick.Controls.Styles 1.4
-import QtQuick.Layouts 1.2
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Hdrv 1.0
 
 
@@ -31,7 +30,7 @@ ApplicationWindow {
       RowLayout {
         anchors.fill: parent
 
-        TabBar {
+        TabNav {
           Layout.fillWidth: true
           Layout.fillHeight: true
         }
@@ -41,16 +40,12 @@ ApplicationWindow {
           Layout.preferredWidth: 30
           Layout.preferredHeight: 20
           Layout.alignment: Qt.AlignBottom
-          iconSource: 'qrc:/hdrv/media/SingleInstance.png'
-          style: ButtonStyle {
-            background: Item {
-              Rectangle {
-                anchors.fill: parent
-                anchors.rightMargin: 4
-                anchors.leftMargin: 4
-                color: server.running || control.hovered ? '#D9D9FA' : '#C0C0C0'
-              }
-            }
+          icon.source: 'qrc:/hdrv/media/SingleInstance.png'
+          background: Rectangle {
+            anchors.fill: parent
+            anchors.rightMargin: 4
+            anchors.leftMargin: 4
+            color: server.running || serverButton.hovered ? '#D9D9FA' : '#C0C0C0'
           }
           onClicked: {
             if(server.running) {
@@ -67,18 +62,14 @@ ApplicationWindow {
           Layout.preferredWidth: 26
           Layout.preferredHeight: 20
           Layout.alignment: Qt.AlignBottom
-          iconSource: 'qrc:/hdrv/media/Properties.png'
+          icon.source: 'qrc:/hdrv/media/Properties.png'
           checkable: true
           onClicked: if (settingsButton.checked) settingsButton.checked = false;
-          style: ButtonStyle {
-            background: Item {
-              Rectangle {
-                anchors.fill: parent
-                anchors.rightMargin: 2
-                anchors.leftMargin: 2
-                color: control.checked || control.hovered ? '#FAFAFA' : '#C0C0C0'
-              }
-            }
+          background: Rectangle {
+            anchors.fill: parent
+            anchors.rightMargin: 2
+            anchors.leftMargin: 2
+            color: imagePropertiesButton.checked || imagePropertiesButton.hovered ? '#FAFAFA' : '#C0C0C0'
           }
         }
 
@@ -87,18 +78,14 @@ ApplicationWindow {
           Layout.preferredWidth: 28
           Layout.preferredHeight: 20
           Layout.alignment: Qt.AlignBottom
-          iconSource: 'qrc:/hdrv/media/Settings.png'
+          icon.source: 'qrc:/hdrv/media/Settings.png'
           checkable: true
           onClicked: if (imagePropertiesButton.checked) imagePropertiesButton.checked = false;
-          style: ButtonStyle {
-            background: Item {
-              Rectangle {
-                anchors.fill: parent
-                anchors.rightMargin: 4
-                anchors.leftMargin: 2
-                color: control.checked || control.hovered ? '#FAFAFA' : '#C0C0C0'
-              }
-            }
+          background: Rectangle {
+            anchors.fill: parent
+            anchors.rightMargin: 4
+            anchors.leftMargin: 2
+            color: settingsButton.checked || settingsButton.hovered ? '#FAFAFA' : '#C0C0C0'
           }
         }
       }

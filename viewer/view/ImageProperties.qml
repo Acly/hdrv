@@ -1,6 +1,6 @@
-import QtQuick 2.5
-import QtQuick.Controls 1.2
-import QtQuick.Layouts 1.2
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Hdrv 1.0
 
 Rectangle {
@@ -53,8 +53,8 @@ Rectangle {
       id: brightnessSlider
       Layout.fillWidth: true
       Layout.minimumHeight: scaleText.height
-      minimumValue: images.current.minBrightness
-      maximumValue: images.current.maxBrightness
+      from: images.current.minBrightness
+      to: images.current.maxBrightness
       stepSize: 0.1
       value: images.current.brightness
       property bool initialized: false // workaround, slider sets 1.0 at start up (?)
@@ -74,8 +74,8 @@ Rectangle {
       id: gammaSlider
       Layout.fillWidth: true
       Layout.minimumHeight: scaleText.height
-      minimumValue: images.current.minGamma
-      maximumValue: images.current.maxGamma
+      from: images.current.minGamma
+      to: images.current.maxGamma
       stepSize: 0.1
       value: images.current.gamma
       property bool initialized: false // workaround, slider sets 1.0 at start up (?)
@@ -119,17 +119,17 @@ Rectangle {
       RadioButton {
         id: differenceButton
         text: 'Difference'
-        exclusiveGroup: comparisonModeGroup
+        ButtonGroup.group: comparisonModeGroup
       }
       RadioButton {
         id: sideBySideButton
         text: 'Side by side'
-        exclusiveGroup: comparisonModeGroup
+        ButtonGroup.group: comparisonModeGroup
       }
-      ExclusiveGroup {
+      ButtonGroup {
         id: comparisonModeGroup
-        current: images.current.comparisonMode == ImageDocument.Difference ? differenceButton : sideBySideButton
-        onCurrentChanged: {
+        checkedButton: images.current.comparisonMode == ImageDocument.Difference ? differenceButton : sideBySideButton
+        onClicked: {
           if (current == differenceButton) images.current.comparisonMode = ImageDocument.Difference;
           else images.current.comparisonMode = ImageDocument.SideBySide;
         }
@@ -217,39 +217,38 @@ Rectangle {
     Repeater {
       model: images.current.channels
       Text {
-        text: channelName(index, images.current.channels, channelFormat.current.formatType) + ': '
-              + format(images.current.pixelValue, index, images.current.channels, images.current.isFloat, channelFormat.current.formatType);
+        text: channelName(index, images.current.channels, channelFormat.checkedButton.formatType) + ': '
+              + format(images.current.pixelValue, index, images.current.channels, images.current.isFloat, channelFormat.checkedButton.formatType);
         Layout.columnSpan: 2
         Layout.leftMargin: 10
       }
     }
+    ButtonGroup {
+      id: channelFormat
+      buttons: formatButtons.children
+    }
     RowLayout {
+      id: formatButtons
       Layout.columnSpan: 2
       Layout.leftMargin: 10
-      ExclusiveGroup {
-        id: channelFormat
-      }
+
       RadioButton {
         property string formatType: 'auto'
         text: 'Auto'
-        exclusiveGroup: channelFormat
         checked: true
       }
       RadioButton {
         property string formatType: 'float'
         text: 'Float'
-        exclusiveGroup: channelFormat
       }
       RadioButton {
         property string formatType: 'byte'
         text: 'Byte'
-        exclusiveGroup: channelFormat
       }
       RadioButton {
         property string formatType: 'normal'
         text: 'Normal'
-        exclusiveGroup: channelFormat
-        visible: image.current.channels >= 3
+        visible: images.current.channels >= 3
       }
     }
   }
