@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <optional>
+#include <cstddef>
 
 namespace hdrv {
 
@@ -29,6 +30,12 @@ class Image
 public:
   enum Format { Byte, Float };
 
+  struct Layer {
+    std::string name;
+    int channels;
+    size_t offset;
+  };
+
   static Image makeEmpty();
 
   static Result<Image> loadPFM(std::string const& path);
@@ -38,7 +45,7 @@ public:
 
   static Result<Image> loadPFM(std::istream& stream);
   static Result<Image> loadPIC(std::istream& stream);
-  static Result<Image> loadEXR(std::istream& stream);
+  static Result<Image> loadEXR(std::byte const*, size_t);
 
   int width() const { return width_; }
   int height() const { return height_; }
@@ -57,13 +64,16 @@ public:
   Result<Image> scaleByHalf() const;
 
   Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data);
+  Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data, std::vector<Layer>&& layers);
 
 private:
+
   int width_;
   int height_;
   int channels_;
   Format format_;
   std::vector<uint8_t> data_;
+  std::vector<Layer> layers_;
 };
 
 }

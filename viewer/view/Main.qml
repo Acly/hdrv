@@ -24,7 +24,7 @@ ApplicationWindow {
 
     Rectangle {
       color: '#404040'
-      Layout.preferredHeight: 24
+      Layout.preferredHeight: 28
       Layout.fillWidth: true
 
       RowLayout {
@@ -35,58 +35,35 @@ ApplicationWindow {
           Layout.fillHeight: true
         }
 
-        Button {
-          id: serverButton
-          Layout.preferredWidth: 30
-          Layout.preferredHeight: 20
-          Layout.alignment: Qt.AlignBottom
-          icon.source: 'qrc:/hdrv/media/SingleInstance.png'
-          background: Rectangle {
-            anchors.fill: parent
-            anchors.rightMargin: 4
-            anchors.leftMargin: 4
-            color: server.running || serverButton.hovered ? '#D9D9FA' : '#C0C0C0'
-          }
-          onClicked: {
-            if(server.running) {
-              server.stop();
-            } else {
-              client.remoteStopServer();
-              server.start();
-            }
-          }
-        }
-
-        Button {
+        ToolButton {
           id: imagePropertiesButton
-          Layout.preferredWidth: 26
-          Layout.preferredHeight: 20
           Layout.alignment: Qt.AlignBottom
-          icon.source: 'qrc:/hdrv/media/Properties.png'
+          Layout.preferredHeight: parent.height - 4
+          Layout.preferredWidth: settingsButton.height
           checkable: true
-          onClicked: if (settingsButton.checked) settingsButton.checked = false;
-          background: Rectangle {
-            anchors.fill: parent
-            anchors.rightMargin: 2
-            anchors.leftMargin: 2
-            color: imagePropertiesButton.checked || imagePropertiesButton.hovered ? '#FAFAFA' : '#C0C0C0'
+          contentItem: Image {
+            source: 'qrc:/hdrv/media/Properties.png'
           }
+          background: Rectangle {
+            color: parent.hovered || parent.checked ? '#FAFAFA' : '#C0C0C0'
+          }
+          onClicked: if (imagePropertiesButton.checked) settingsButton.checked = false;
         }
 
-        Button {
+        ToolButton {
           id: settingsButton
-          Layout.preferredWidth: 28
-          Layout.preferredHeight: 20
           Layout.alignment: Qt.AlignBottom
-          icon.source: 'qrc:/hdrv/media/Settings.png'
+          Layout.preferredHeight: parent.height - 4
+          Layout.preferredWidth: settingsButton.height
+          Layout.rightMargin: 4
           checkable: true
-          onClicked: if (imagePropertiesButton.checked) imagePropertiesButton.checked = false;
-          background: Rectangle {
-            anchors.fill: parent
-            anchors.rightMargin: 4
-            anchors.leftMargin: 2
-            color: settingsButton.checked || settingsButton.hovered ? '#FAFAFA' : '#C0C0C0'
+          contentItem: Image {
+            source: 'qrc:/hdrv/media/Settings.png'
           }
+          background: Rectangle {
+            color: parent.hovered || parent.checked ? '#FAFAFA' : '#C0C0C0'
+          }
+          onClicked: if (settingsButton.checked) imagePropertiesButton.checked = false;
         }
       }
     }

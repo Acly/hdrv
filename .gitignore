@@ -2,3 +2,5 @@ build
 build-*/
 *.pro.user*
 .vs
+.vscode
+CMakeSettings.json

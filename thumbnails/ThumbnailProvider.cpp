@@ -6,6 +6,7 @@
 #include <sstream>
 #include <math.h>
 #include <algorithm>
+#include <cstdlib>
 
 #include <Shlwapi.h>
 
@@ -15,6 +16,22 @@
 #endif
 
 #pragma comment(lib, "Shlwapi.lib")
+
+struct Buffer : std::streambuf
+{
+  std::unique_ptr<std::byte[]> data;
+  size_t size = 0;
+
+  Buffer() = default;
+  explicit Buffer(size_t size)
+    : data(new std::byte[size])
+    , size(size)
+  {
+    char* begin = reinterpret_cast<char*>(data.get());
+    this->setg(begin, begin, begin + size);
+  }
+};
+
 
 ThumbnailProvider::ThumbnailProvider(ImageExtension ext)
   : referenceCounter_(1), stream_(nullptr), imageExtension_(ext)
@@ -85,39 +102,51 @@ IFACEMETHODIMP ThumbnailProvider::Initialize(IStream *stream, DWORD /*grfMode*/)
 // GetThumbnail provides a handle to the retrieved image. It also provides a 
 // value that indicates the color format of the image and whether it has 
 // valid alpha information.
-IFACEMETHODIMP ThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
-  WTS_ALPHATYPE *pdwAlpha)
+IFACEMETHODIMP ThumbnailProvider::GetThumbnail(UINT cx, HBITMAP* phbmp,
+                                               WTS_ALPHATYPE* pdwAlpha)
 {
   HRESULT hr = E_OUTOFMEMORY;
 
-  hdrv::Result<hdrv::Image> img = hdrv::Result<hdrv::Image>("Unsupported image format");
+  // Read data from stream
+  STATSTG streamStat{};
+  if (HRESULT r = stream_->Stat(&streamStat, STATFLAG_NONAME); r != S_OK) {
+    OutputDebugStringA("hdrv.thumbnail error: IStream::Stat failed");
+    return r;
+  }
+
+  if (streamStat.cbSize.QuadPart > 132710400ull) {
+    // Avoid spending too many system resources on thumbnails
+    OutputDebugStringA("hdrv.thumbnail warning: File too large");
+    return E_ABORT;
+  }
+
+  Buffer streamBuffer(streamStat.cbSize.QuadPart);
+  ULONG bytesRead = 0;
+  if (HRESULT r = stream_->Read(streamBuffer.data.get(), ULONG(streamBuffer.size), &bytesRead); r != S_OK) {
+    OutputDebugStringA("hdrv.thumbnail error: IStream::Read failed");
+    return r;
+  }
 
   // Load the image from the stream
-  /*
-  
-  TODO
-  
-  switch (imageExtension_)
-  {
-  case ImageExtension::EXR: { IStreamExr s(stream_); img = hdrv::Image::loadEXR(s); break; }
-  case ImageExtension::PFM: { IStreamStream s(stream_); img = hdrv::Image::loadPFM(s); break; }
-  case ImageExtension::PIC: { IStreamStream s(stream_); img = hdrv::Image::loadPIC(s); break; }
+  auto img = hdrv::Result<hdrv::Image>("Unsupported image format");
+  std::istream stdStream(&streamBuffer);
+  switch (imageExtension_) {
+  case ImageExtension::EXR: { img = hdrv::Image::loadEXR(streamBuffer.data.get(), streamBuffer.size); break; }
+  case ImageExtension::PFM: { img = hdrv::Image::loadPFM(stdStream); break; }
+  case ImageExtension::PIC: { img = hdrv::Image::loadPIC(stdStream); break; }
   }
-  */
-  if (!img)
-  {
+  if (!img) {
     std::string err = "hdrv.thumbnail error: " + img.error();
     OutputDebugStringA(err.c_str());
     return E_FAIL;
   }
   auto pic = std::move(img).value();
+  streamBuffer = {};
 
   // Downscale image to desired maximum resolution cx
   int maxIterations = 16;
-  while ((uint32_t)pic.width() > cx || (uint32_t)pic.height() > cx)
-  {
-    if (--maxIterations == 0)
-    {
+  while ((uint32_t)pic.width() > cx || (uint32_t)pic.height() > cx) {
+    if (--maxIterations == 0) {
       OutputDebugStringA("hdrv.thumbnail error: too many iterations");
       return E_FAIL;
     }
@@ -128,17 +157,16 @@ IFACEMETHODIMP ThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
   // Put everything into a bitmap
   uint32_t nWidth = pic.width(), nHeight = pic.height();
 
-  BITMAPINFO bmi = { sizeof(bmi.bmiHeader) };
+  BITMAPINFO bmi = {sizeof(bmi.bmiHeader)};
   bmi.bmiHeader.biWidth = nWidth;
   bmi.bmiHeader.biHeight = -static_cast<LONG>(nHeight);
   bmi.bmiHeader.biPlanes = 1;
   bmi.bmiHeader.biBitCount = 32;
   bmi.bmiHeader.biCompression = BI_RGB;
 
-  uint8_t *pBits;
-  HBITMAP hbmp = CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, reinterpret_cast<void **>(&pBits), NULL, 0);
-  if (hbmp)
-  {
+  uint8_t* pBits;
+  HBITMAP hbmp = CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, reinterpret_cast<void**>(&pBits), NULL, 0);
+  if (hbmp) {
     hr = S_OK;
     *phbmp = hbmp;
     *pdwAlpha = (pic.channels() > 3) ? WTSAT_ARGB : WTSAT_RGB;
@@ -149,7 +177,7 @@ IFACEMETHODIMP ThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
       return (uint8_t)std::min(powf(in, 1.f / 2.2f) * 255.f, 255.f);
     };
 
-    for (uint32_t x = 0; x < nWidth; ++x)
+    for (uint32_t x = 0; x < nWidth; ++x) {
       for (uint32_t y = 0; y < nHeight; ++y)
       {
         const int pixelstride = 4;
@@ -167,6 +195,7 @@ IFACEMETHODIMP ThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
         pBits[linestride * y + pixelstride * x + 2] = r;
         pBits[linestride * y + pixelstride * x + 3] = a;
       }
+    }
   }
   return hr;
 }

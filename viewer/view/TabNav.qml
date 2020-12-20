@@ -22,8 +22,8 @@ ListView {
     id: imageTabDelegate
     Item {
       id: imageTabItem
-      height: 24
-      width: imageTabText.width + 77
+      height: 28
+      width: imageTabText.width + 85
 
       function closeTab(index) {
         if (images.items.length > 1) images.remove(index);
@@ -55,7 +55,7 @@ ListView {
           anchors.left: parent.left
           anchors.top: parent.top
           anchors.leftMargin: 3
-          anchors.topMargin: 2
+          anchors.topMargin: 4
           source: 'qrc:/hdrv/media/' + fileType + '.png'
           visible: !busy
         }
@@ -65,49 +65,37 @@ ListView {
           anchors.left: imageTabIcon.right
           anchors.top: parent.top
           anchors.leftMargin: 4
-          anchors.topMargin: 3
+          anchors.topMargin: 5
           text: name;
         }
 
         RowLayout {
           id: buttonArea
-          anchors.verticalCenter: parent.verticalCenter
+          anchors.top: parent.top
+          anchors.topMargin: 2
           anchors.right: parent.right
           anchors.rightMargin: 3
           spacing: 0
 
-          Button {
+          ToolButton {
             id: compareImageButton
-            visible: !isComparison && !images.current.isComparison && images.current.url != url
             Layout.alignment: Qt.AlignVCenter
-            background: Rectangle {
-              implicitWidth: 13
-              implicitHeight: 13
-              radius: 6
-              color: control.hovered ? '#0080F0' : 'transparent'
-              Image {
-                anchors.fill: parent
-                anchors.margins: 2
-                source: control.hovered ? 'qrc:/hdrv/media/CompareActive.png' : 'qrc:/hdrv/media/Compare.png'
-              }
-            }
+            visible: !isComparison && !images.current.isComparison && images.current.url != url
+            icon.source: 'qrc:/hdrv/media/Compare.png'
+            icon.color: compareImageButton.hovered ? 'black' : '#505050'
+            background: null
             onClicked: images.compare(index)
+            ToolTip.visible: hovered
+            ToolTip.delay: 500
+            ToolTip.text: 'Compare current image to this image.'
           }
 
-          Button {
+          ToolButton {
             id: closeImageButton
             Layout.alignment: Qt.AlignVCenter
-            background: Rectangle {
-              implicitWidth: 13
-              implicitHeight: 13
-              radius: 6
-              color: control.hovered ? '#F00000' : 'transparent'
-              Image {
-                anchors.fill: parent
-                anchors.margins: 2
-                source: control.hovered ? 'qrc:/hdrv/media/CloseActive.png' : 'qrc:/hdrv/media/Close.png'
-              }
-            }
+            icon.source: 'qrc:/hdrv/media/Close.png'
+            icon.color: closeImageButton.hovered ? 'black' : '#505050'
+            background: null
             onClicked: closeTab(index)
           }
 
@@ -136,16 +124,15 @@ ListView {
   }
 
   footer: Item {
-    Button {
+    ToolButton {
       anchors.left: parent.left
       anchors.top: parent.top
       anchors.leftMargin: 5
       anchors.topMargin: 4
-      width: 25
-      height: 20
+      height: 28
       icon.source: 'qrc:/hdrv/media/Open.png'
       background: Rectangle {
-        color: control.hovered ? '#FFCF10' : inactiveColor
+        color: parent.hovered ? '#F0C020' : inactiveColor
       }
       onClicked: loadImageDialog.open()
     }

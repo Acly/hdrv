@@ -1,7 +1,5 @@
 #include <image/Image.hpp>
 
-#include <fstream>
-
 #include <pfm/pfm_input_file.hpp>
 #include <pfm/pfm_output_file.hpp>
 
@@ -20,6 +18,10 @@
 
 #include <QImage>
 
+#include <array>
+#include <fstream>
+#include <string_view>
+
 namespace hdrv {
 
 Image::Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data)
@@ -29,6 +31,12 @@ Image::Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data)
   , format_(f)
   , data_(std::move(data))
 {}
+
+Image::Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data, std::vector<Layer>&& layers)
+  : Image(w, h, c, f, std::move(data))
+{
+  layers_ = std::move(layers);
+}
 
 Image Image::makeEmpty()
 {
@@ -245,53 +253,232 @@ Result<bool> Image::storePIC(std::string const& path) const
 
 // ILM OpenEXR
 
-#define EXR_CHECK(ret) \
+#define EXR_CHECK(ret, msg) \
   if (ret != TINYEXR_SUCCESS) { \
-    if (err) { \
-      std::string message(err); \
+    std::string msgString(msg); \
+    if (err != nullptr) { \
+      msgString += ": " + std::string(err); \
       FreeEXRErrorMessage(err); \
-      return Result<Image>(message); \
     } \
+    return Result<Image>(msgString); \
   }
 
-template<typename Source>
-Result<Image> loadEXRFile(Source && source)
+struct EXRChannel
 {
-  float* pixels = nullptr;
-  int width, height;
-  char const* err = nullptr;
-  EXR_CHECK(LoadEXRWithLayer(&pixels, &width, &height, source, nullptr, &err));
+  std::string_view name;
+  int index = -1;
 
-  size_t stride = size_t(width) * 4 * sizeof(float);
-  std::vector<unsigned char> storage(size_t(height) * stride);
-  for (int i = 0; i < height; ++i) {
-    std::memcpy(storage.data() + size_t(height - i - 1) * stride,
-                pixels + i * size_t(width) * 4,
-                stride);
+  int order() const {
+    if (name == "R") return 0;
+    if (name == "G") return 1;
+    if (name == "B") return 2;
+    if (name == "A") return 3;
+    if (name == "X") return 0;
+    if (name == "Y") return 1;
+    if (name == "Z") return 2;
+    return 0;
   }
-  return Image(width, height, 4, Image::Float, std::move(storage));
+};
+
+inline bool operator<(EXRChannel const& a, EXRChannel const& b) {
+  return a.order() < b.order();
 }
 
-Result<Image> Image::loadEXR(std::istream& stream)
+struct EXRLayer
 {
-  //return loadEXRFile(stream);
-  return Result<Image>(std::string("TODO"));
+  std::string_view name;
+  std::array<EXRChannel, 4> channels;
+  int channelCount = 0;
+};
+
+Result<Image> Image::loadEXR(std::byte const* inputMemory, size_t size)
+{
+  auto memory = reinterpret_cast<unsigned char const*>(inputMemory);
+  char const* err = nullptr;
+
+  EXRVersion exrVersion;
+  EXRImage exrImage;
+  EXRHeader exrHeader;
+
+  InitEXRHeader(&exrHeader);
+
+  EXR_CHECK(ParseEXRVersionFromMemory(&exrVersion, memory, size),
+            "Failed to parse EXR version header");
+
+  EXR_CHECK(ParseEXRHeaderFromMemory(&exrHeader, &exrVersion, memory, size, &err),
+            "Failed to parse EXR header");
+
+  for (int i = 0; i < exrHeader.num_channels; ++i) {
+    exrHeader.requested_pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT;
+  }
+
+  InitEXRImage(&exrImage);
+  EXR_CHECK(LoadEXRImageFromMemory(&exrImage, &exrHeader, memory, size, &err),
+            "Failed to decode EXR image");
+
+  EXRLayer defaultLayer;
+  std::vector<EXRLayer> layers;
+  int totalChannels = 0;
+
+  // EXR channels are typically named A, B, G, R (ordered alphabetically).
+  // However the file may also contain additional layers using dot-separated
+  // naming scheme. And technically channels can have any name and occur in any order.
+  for (int i = 0; i < exrHeader.num_channels; ++i) {
+    std::string_view fullName = exrHeader.channels[i].name;
+    std::string_view channelName = fullName;
+    EXRLayer* layer = nullptr;
+    if (auto n = fullName.rfind('.'); n == std::string_view::npos) {
+      layer = &defaultLayer;
+    } else {
+      auto layerName = fullName.substr(0, n);
+      channelName = fullName.substr(n + 1);
+      auto compareName = [&](auto& l) { return l.name == layerName; };
+      if (auto x = std::find_if(layers.begin(), layers.end(), compareName); x != layers.end()) {
+        layer = &(*x);
+      } else {
+        layers.push_back(EXRLayer{layerName, {}, 0});
+        layer = &layers.back();
+      }
+    }
+    if (layer->channelCount < 4) {
+      layer->channels[layer->channelCount++] = EXRChannel{channelName, i};
+      ++totalChannels;
+    }
+  }
+
+  layers.insert(layers.begin(), defaultLayer);
+  for (auto& layer : layers) {
+    std::sort(layer.channels.begin(), layer.channels.begin() + layer.channelCount);
+  }
+
+  // All layers are going to be stored in one big buffer. The layer structs remembers
+  // the offset where a new layer starts.
+  std::vector<Image::Layer> resultLayers(layers.size());
+  std::vector<uint8_t> resultData(totalChannels * exrImage.width * exrImage.height * sizeof(float));
+  size_t dataOffset = 0;
+
+  for (int l = 0; l < int(layers.size()); ++l) {
+    auto& layer = layers[l];
+    resultLayers[l].name = layer.name;
+    resultLayers[l].offset = dataOffset;
+
+    // EXR contains one buffer per channel, so we need to convert to interlaced
+    // RGBA pixel format (supporting 1-4 channels). This also does a vertical flip.
+    for (int c = 0; c < layer.channelCount; ++c) {
+      auto& channel = layer.channels[c];
+      resultLayers[l].channels += 1;
+      for (int y = 0; y < exrImage.height; ++y) {
+        for (int x = 0; x < exrImage.width; ++x) {
+          int coord = y * exrImage.width + x;
+          int coordFlipped = (exrImage.height - y - 1) * exrImage.width + x;
+          auto src = exrImage.images[channel.index] + coord * sizeof(float);
+          auto dst = resultData.data() + dataOffset
+            + (coordFlipped * layer.channelCount + c) * sizeof(float);
+          std::memcpy(dst, src, sizeof(float));
+        }
+      }
+    }
+    dataOffset += exrImage.width * exrImage.height * layer.channelCount * sizeof(float);
+    Q_ASSERT(dataOffset <= resultData.size());
+  }
+  Q_ASSERT(dataOffset == resultData.size());
+
+  return Image(exrImage.width, exrImage.height, defaultLayer.channelCount, Image::Float,
+               std::move(resultData), std::move(resultLayers));
 }
 
 Result<Image> Image::loadEXR(std::string const& path)
 {
-  return loadEXRFile(path.c_str());
+  std::ifstream stream(path, std::ios::in | std::ios::binary);
+  stream.seekg(0, std::ios::end);
+  size_t size = stream.tellg();
+  stream.seekg(0, std::ios::beg);
+  std::vector<std::byte> memory(size);
+  stream.read(reinterpret_cast<char*>(memory.data()), size);
+  if (!stream.good()) {
+    return Result<Image>(std::string("Could not read file ") + path);
+  }
+  return loadEXR(memory.data(), size);
 }
 
 Result<bool> Image::storeEXR(std::string const& path) const
 {
   try {
-    return Result<bool>(std::string("TODO"));
+    int w = width();
+    int h = height();
+
+    EXRHeader header;
+    InitEXRHeader(&header);
+
+    EXRImage image;
+    InitEXRImage(&image);
+    image.num_channels = channels();
+    image.width = width();
+    image.height = height();
+
+    float const* interlaced = reinterpret_cast<float const*>(data());
+    std::vector<float> perChannel(w * h * channels());
+    float* pixelPointers[4] = {};
+    EXRChannelInfo channelInfos[4] = {};
+    int pixelTypes[4] = {};
+    int requestedPixelTypes[4] = {};
+
+    int channelsAdded = 0;
+    auto addChannel = [&](int index, char const* name) {      
+      Q_ASSERT(index >= 0 && index <= 4);
+      for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+          int interlacedIndex = ((h - y - 1) * w + x) * channels() + index;
+          int perChannelIndex = index * w * h + y * w + x;
+          Q_ASSERT(interlacedIndex < w * h * channels());
+          Q_ASSERT(perChannelIndex < perChannel.size());
+          perChannel[perChannelIndex] = interlaced[interlacedIndex];
+        }
+      }
+      int d = channelsAdded++;
+      pixelPointers[d] = perChannel.data() + index * w * h;
+      snprintf(channelInfos[d].name, 256, name);
+      pixelTypes[d] = TINYEXR_PIXELTYPE_FLOAT;
+      requestedPixelTypes[d] = TINYEXR_PIXELTYPE_FLOAT;
+    };
+
+    // Add channels in alphabetical order (like OpenEXR does)
+    if (channels() >= 4) {
+      addChannel(3, "A");
+    }
+    if (channels() >= 3) {
+      addChannel(2, "B");
+    }
+    if (channels() >= 2) {
+      addChannel(1, "G");
+    }
+    if (channels() >= 1) {
+      addChannel(0, "R");
+    }
+    Q_ASSERT(channelsAdded == channels());
+
+    image.images = reinterpret_cast<unsigned char**>(pixelPointers);
+
+    header.num_channels = channelsAdded;
+    header.channels = channelInfos;
+    header.pixel_types = pixelTypes;
+    header.requested_pixel_types = requestedPixelTypes;
+
+    char const* err = nullptr;
+    int ret = SaveEXRImageToFile(&image, &header, path.c_str(), &err);
+    if (ret != TINYEXR_SUCCESS) {
+      std::string errString(err);
+      FreeEXRErrorMessage(err);
+      return Result<bool>(std::move(errString));
+    }
+    return true;
 
   } catch (std::exception const& e) {
-    return Result<bool>(std::string("OpenEXR export failed: ") + e.what());
+    return Result<bool>(std::string("EXR export failed: ") + e.what());
   }
 }
+
+// Qt LDR Image
 
 Result<bool> Image::storeImage(std::string const& path, float brightness, float gamma) const
 {
@@ -313,8 +500,6 @@ Result<bool> Image::storeImage(std::string const& path, float brightness, float 
 
   return Result<bool>(true);
 }
-
-// Qt LDR Image
 
 Result<Image> Image::loadImage(std::string const& path)
 {

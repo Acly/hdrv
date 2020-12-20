@@ -21,7 +21,7 @@ Settings::Settings(QObject * parent)
   QSettings::setDefaultFormat(QSettings::IniFormat);
 
 #ifdef WIN32
-  QFileInfo thumbDll(QDir(QCoreApplication::applicationDirPath()), "thumbnails.dll");
+  QFileInfo thumbDll(QDir(QCoreApplication::applicationDirPath()), "hdrv_thumbnails.dll");
   thumbnailsAvailable_ = thumbDll.exists();
   if (thumbnailsAvailable_) {
     thumbnailDllPath_ = thumbDll.absoluteFilePath();

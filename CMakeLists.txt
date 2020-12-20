@@ -48,9 +48,10 @@ add_executable(hdrv
     viewer/view/IPCClient.hpp
     viewer/view/IPCServer.cpp
     viewer/view/IPCServer.hpp
+    $<$<PLATFORM_ID:Windows>:media/hdrv.rc>
 )
 target_include_directories(hdrv PRIVATE viewer)
-target_compile_definitions(hdrv PRIVATE NOMINMAX $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
+target_compile_definitions(hdrv PRIVATE NOMINMAX $<$<CONFIG:Debug>:QT_QML_DEBUG>)
 target_link_libraries(hdrv PRIVATE pfm pic tinyexr Qt6::Core Qt6::Quick Qt6::Concurrent)
 
 add_library(hdrv_thumbnails SHARED
@@ -58,7 +59,6 @@ add_library(hdrv_thumbnails SHARED
     thumbnails/ClassFactory.hpp
     thumbnails/Registry.cpp
     thumbnails/Registry.hpp
-    thumbnails/StreamWrapper.hpp
     thumbnails/ThumbnailProvider.cpp
     thumbnails/ThumbnailProvider.hpp
     thumbnails/Thumbnails.cpp

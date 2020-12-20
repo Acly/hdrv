@@ -3,106 +3,65 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt.labs.platform 1.1
 
-Rectangle {
-  border.width: exportButton.activeFocus ? 2 : 1
-  border.color: '#888'
-  radius: 4
-  height: 22
-  gradient: Gradient {
-    GradientStop { position: 0 ; color: exportButton.pressed ? '#ddd' : '#eee' }
-    GradientStop { position: 1 ; color: exportButton.pressed ? '#ccc' : '#ddd' }
-  }
-
+Control {
   property bool exportable: images.current.isFloat && !images.current.isComparison
-
-  property Rectangle subButtonStyle: Rectangle {
-    implicitWidth: 40
-    border.color: control.pressed ? '#888' : 'transparent'
-    gradient: Gradient {
-      GradientStop { position: 0; color: control.pressed ? '#ddd' : 'transparent' }
-      GradientStop { position: 1; color: control.pressed ? '#ccc' : 'transparent' }
-    }
-  }
 
   RowLayout {
     anchors.fill: parent
     spacing: 0
 
-    Button {
+    ToolButton {
       id: exportButton
-      text: 'Export'
       Layout.fillWidth: true
+      text: 'Export'
       enabled: exportable
       onClicked: storeImageDialog.open()
-      background: Rectangle { color: 'transparent' }
     }
 
-    Rectangle {
-      width: 1
-      Layout.fillHeight: true
-      color: '#888'
-    }
+    ToolSeparator {}
 
-    Button {
+    ToolButton {
       id: exportHDRButton
+      Layout.fillWidth: true
       text: 'HDR'
       enabled: exportable
       onClicked: {
-        storeImageDialog.selectedNameFilter = 'Radiance HDR (*.hdr)'
+        storeImageDialog.selectedNameFilter.index = 0
         storeImageDialog.open()
       }
-      background: subButtonStyle
     }
 
-    Rectangle {
-      width: 1
-      Layout.fillHeight: true
-      color: '#888'
-    }
-
-    Button {
+    ToolButton {
       id: exportPFMButton
+      Layout.fillWidth: true
       text: 'PFM'
       enabled: exportable
       onClicked: {
-        storeImageDialog.selectedNameFilter = 'PFM image (*.pfm)'
+        storeImageDialog.selectedNameFilter.index = 1
         storeImageDialog.open()
       }
-      background: subButtonStyle
     }
     
-    Rectangle {
-      width: 1
-      Layout.fillHeight: true
-      color: '#888'
-    }
-    
-    Button {
+    ToolButton {
       id: exportEXRButton
+      Layout.fillWidth: true
       text: 'EXR'
       enabled: exportable
       onClicked: {
-        storeImageDialog.selectedNameFilter = 'OpenEXR image (*.exr)'
+        storeImageDialog.selectedNameFilter.index = 2
         storeImageDialog.open()
       }
-      background: subButtonStyle
     }
 
-    Rectangle {
-      width: 1
-      Layout.fillHeight: true
-      color: '#888'
-    }
-
-    Button {
+    ToolButton {
       id: exportPNGButton
       text: 'PNG'
+      Layout.fillWidth: true
       enabled: exportable
       onClicked: {
-        storeImageDialog.selectedNameFilter = 'PNG image (*.png)'
+        storeImageDialog.selectedNameFilter.index = 3
         storeImageDialog.open()
       }
-      background: subButtonStyle
     }
 
     FileDialog {
@@ -111,7 +70,7 @@ Rectangle {
       folder: images.current.directory
       fileMode: FileDialog.SaveFile
       nameFilters: [ 'Radiance HDR (*.hdr)', 'PFM image (*.pfm)', 'OpenEXR image (*.exr)', 'PNG image (*.png)' ]
-      onAccepted: images.current.store(storeImageDialog.fileUrl);
+      onAccepted: images.current.store(storeImageDialog.file);
     }
   }
 }
