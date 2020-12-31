@@ -1,6 +1,5 @@
 #include "ThumbnailProvider.hpp"
 #include "Thumbnails.hpp"
-#include "StreamWrapper.hpp"
 
 #include <image/Image.hpp>
 #include <sstream>

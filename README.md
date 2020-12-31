@@ -67,7 +67,7 @@ use the _Open image_ button in the tab bar.
 * \[ **C** \] Open comparison mode for the last two images.
 * \[ **R** \] Reset positioning and scaling of the image.
 
-#### Thumbnails
+### Thumbnails
 
 A thumbnail shell integration is present for Windows in the subproject _thumbnails_.
 On x86 Windows installations the project must be compiled as x86 target and vice versa for x64 Windows installations to be compatible.

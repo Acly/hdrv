@@ -1,27 +1,19 @@
-version: 0.4.{build}
+version: 0.7.{build}
 skip_tags: true
-configuration:
-- Debug
-- Release
+image:
+  - Visual Studio 2019
+  - Ubuntu2004
+configuration: Release
 platform: x64
+environment:
+  CC: /usr/bin/gcc-9
+  CXX: /usr/bin/g++-9
+install:
+  - sh: sudo apt-get -y install libgl1-mesa-dev
 before_build:
-- cmd: >-
-    set PATH=C:\Qt\5.6\msvc2015_64\bin;%PATH%
-
-    mkdir build
-
-    cd build
-
-    qmake -tp vc -r ../hdrv.pro "BOOST_ROOT=C:\Libraries\boost_1_60_0"
-
-    cd ..
-build:
-  project: build\hdrv.sln
-  verbosity: minimal
-after_build:
-- cmd: 7z a hdrv_%CONFIGURATION%.zip %APPVEYOR_BUILD_FOLDER%\build\viewer\%CONFIGURATION%\hdrv.*
-artifacts:
-- path: hdrv_Debug.zip
-  name: HDRV Debug
-- path: hdrv_Release.zip
-  name: HDRV Release
+  - mkdir build
+  - cd build
+  - cmd: cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_PREFIX_PATH=C:\Qt\6.0.0\msvc2019_64 ..
+  - sh: cmake -DCMAKE_PREFIX_PATH=$HOME/Qt/6.0.0/gcc_64 ..
+build_script:
+  - cmake --build . --config Release
