@@ -54,6 +54,8 @@ target_include_directories(hdrv PRIVATE viewer)
 target_compile_definitions(hdrv PRIVATE NOMINMAX $<$<CONFIG:Debug>:QT_QML_DEBUG>)
 target_link_libraries(hdrv PRIVATE pfm pic tinyexr Qt6::Core Qt6::Quick Qt6::Concurrent)
 
+if (WIN32)
+
 add_library(hdrv_thumbnails SHARED
     thumbnails/ClassFactory.cpp
     thumbnails/ClassFactory.hpp
@@ -69,3 +71,6 @@ add_library(hdrv_thumbnails SHARED
 target_include_directories(hdrv_thumbnails PRIVATE viewer thumbnails)
 target_compile_definitions(hdrv_thumbnails PRIVATE NOMINMAX)
 target_link_libraries(hdrv_thumbnails PRIVATE pfm pic tinyexr Qt6::Core Qt6::Gui)
+
+endif(WIN32)
+

@@ -18,9 +18,7 @@ QString readFile(QString const& name)
     return "";
   }
   QTextStream stream(&file);
-  QString result = stream.readAll();
-  qDebug(qUtf8Printable(result));
-  return result;
+  return stream.readAll();
 }
 
 std::unique_ptr<QOpenGLShaderProgram> createProgram()

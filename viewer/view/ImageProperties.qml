@@ -15,10 +15,7 @@ Rectangle {
     return str;
   }
 
-  GridLayout {
-    columns: 3
-    columnSpacing: 5
-    rowSpacing: 8
+  ColumnLayout {
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: parent.top
@@ -26,123 +23,115 @@ Rectangle {
     anchors.rightMargin: 10
     anchors.topMargin: 10
 
-    Text { text: '<b>Rendering</b>'; Layout.columnSpan: 3 }
+    spacing: 10
 
-    Text { text: 'Zoom:' }
-    TextField {
-      id: scaleText
-      Layout.columnSpan: 2
-      validator: DoubleValidator {
-        notation: DoubleValidator.StandardNotation
-        decimals: 3
-        bottom: 0.01
-      }
-      focus: true
-      text: presentFloat(images.current.scale, 4)
-      onEditingFinished: images.current.scale = scaleText.text
+    Column {
+      Layout.fillWidth: true
       Text {
-        text: 'x'
+        id: renderingHeader
+        text: '<b>Rendering</b>'
+      }
+
+      Text {
+        text: 'Zoom: ' + images.current.scale + 'x'
+        MouseArea {
+          anchors.fill: parent
+          onDoubleClicked: images.current.scale = 1.0
+        }
+      }
+      Slider {
+        id: scaleSlider
+        anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: parent.baseline
-        anchors.rightMargin: 5
+        from: -4
+        to: 4
+        stepSize: 1.0
+        value: Math.log2(images.current.scale)
+        onValueChanged: images.current.scale = Math.pow(2, scaleSlider.value)
+      }
+
+      Text {
+        text: 'Brightness: ' + (brightnessSlider.value >= 0 ? '+' : '') + brightnessSlider.value.toFixed(1)
+        MouseArea {
+          anchors.fill: parent
+          onDoubleClicked: images.current.brightness = 0.0
+        }
+      }
+      Slider {
+        id: brightnessSlider
+        anchors.left: parent.left
+        anchors.right: parent.right
+        from: images.current.minBrightness
+        to: images.current.maxBrightness
+        stepSize: 0.1
+        value: images.current.brightness
+        onValueChanged: images.current.brightness = brightnessSlider.value;
+      }
+
+      Text {
+        text: 'Gamma: ' + gammaSlider.value.toFixed(1)
+        visible: images.current.isFloat
+        MouseArea {
+          anchors.fill: parent
+          onDoubleClicked: images.current.gamma = 2.2
+        }
+      }
+      Slider {
+        id: gammaSlider
+        anchors.left: parent.left
+        anchors.right: parent.right
+        from: images.current.minGamma
+        to: images.current.maxGamma
+        stepSize: 0.1
+        value: images.current.gamma
+        onValueChanged: images.current.gamma = gammaSlider.value;
+        visible: images.current.isFloat
+      }
+
+      Text { text: 'Alpha Mode' }
+      ComboBox {
+        id: 'alphaModeSelection'
+        Layout.fillWidth: true
+        model: [ "Default", "No Alpha", "Alpha Only" ]
+        onCurrentIndexChanged: images.current.alphaMode = currentIndex;
+        currentIndex: images.current.alphaMode
       }
     }
 
-    Text { text: 'Brightness:' }
-    Slider {
-      id: brightnessSlider
-      Layout.fillWidth: true
-      Layout.minimumHeight: scaleText.height
-      from: images.current.minBrightness
-      to: images.current.maxBrightness
-      stepSize: 0.1
-      value: images.current.brightness
-      property bool initialized: false // workaround, slider sets 1.0 at start up (?)
-      onValueChanged: if (initialized) images.current.brightness = brightnessSlider.value;
-      Component.onCompleted: initialized = true
-    }
-    Text {
-      text: brightnessSlider.value.toFixed(1)
-      MouseArea {
-        anchors.fill: parent
-        onDoubleClicked: images.current.brightness = 0.0
+    Column {
+      Text {
+        text: '<b>Comparison</b>'
+        visible: images.current.isComparison
       }
-    }
-
-    Text { text: 'Gamma:'; visible: images.current.isFloat }
-    Slider {
-      id: gammaSlider
-      Layout.fillWidth: true
-      Layout.minimumHeight: scaleText.height
-      from: images.current.minGamma
-      to: images.current.maxGamma
-      stepSize: 0.1
-      value: images.current.gamma
-      property bool initialized: false // workaround, slider sets 1.0 at start up (?)
-      onValueChanged: if (initialized) images.current.gamma = gammaSlider.value;
-      Component.onCompleted: initialized = true
-      visible: images.current.isFloat
-    }
-    Text {
-      text: gammaSlider.value.toFixed(1)
-      MouseArea {
-        anchors.fill: parent
-        onDoubleClicked: images.current.gamma = 2.2
-      }
-      visible: images.current.isFloat
-    }
-
-    Text { text: 'Alpha Mode:' }
-    ComboBox {
-      id: 'alphaModeSelection'
-      Layout.fillWidth: true
-      model: [ "Default", "No Alpha", "Alpha Only" ]
-      onCurrentIndexChanged: images.current.alphaMode = currentIndex;
-      currentIndex: images.current.alphaMode
-    }
-
-    Text {
-      text: '<b>Comparison</b>'
-      Layout.columnSpan: 3
-      visible: images.current.isComparison
-    }
-
-    Text {
-      text: 'Mode:'
-      visible: images.current.isComparison
-    }
-    Row {
-      Layout.columnSpan: 2
-      visible: images.current.isComparison
-      spacing: 10
-
       RadioButton {
         id: differenceButton
         text: 'Difference'
+        visible: images.current.isComparison
         ButtonGroup.group: comparisonModeGroup
       }
       RadioButton {
         id: sideBySideButton
         text: 'Side by side'
+        visible: images.current.isComparison
         ButtonGroup.group: comparisonModeGroup
       }
       ButtonGroup {
         id: comparisonModeGroup
         checkedButton: images.current.comparisonMode == ImageDocument.Difference ? differenceButton : sideBySideButton
         onClicked: {
-          if (current == differenceButton) images.current.comparisonMode = ImageDocument.Difference;
+          if (differenceButton.checked) images.current.comparisonMode = ImageDocument.Difference;
           else images.current.comparisonMode = ImageDocument.SideBySide;
         }
       }
     }
 
-    Text { text: '<b>Export</b>'; Layout.columnSpan: 3 }
-
-    ExportButton {
-      Layout.columnSpan: 3
+    ColumnLayout {
       Layout.fillWidth: true
+      Text { text: '<b>Export</b>' }
+      ExportButton {
+        Layout.fillWidth: true
+      }
     }
-
   }
 
   function channelName(i, numChannels, displayFormat) {
@@ -232,23 +221,27 @@ Rectangle {
       Layout.columnSpan: 2
       Layout.leftMargin: 10
 
-      RadioButton {
+      ToolButton {
         property string formatType: 'auto'
         text: 'Auto'
+        checkable: true
         checked: true
       }
-      RadioButton {
+      ToolButton {
         property string formatType: 'float'
         text: 'Float'
+        checkable: true
       }
-      RadioButton {
+      ToolButton {
         property string formatType: 'byte'
         text: 'Byte'
+        checkable: true
       }
-      RadioButton {
+      ToolButton {
         property string formatType: 'normal'
         text: 'Normal'
         visible: images.current.channels >= 3
+        checkable: true
       }
     }
   }

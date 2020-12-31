@@ -11,16 +11,6 @@ Control {
     spacing: 0
 
     ToolButton {
-      id: exportButton
-      Layout.fillWidth: true
-      text: 'Export'
-      enabled: exportable
-      onClicked: storeImageDialog.open()
-    }
-
-    ToolSeparator {}
-
-    ToolButton {
       id: exportHDRButton
       Layout.fillWidth: true
       text: 'HDR'

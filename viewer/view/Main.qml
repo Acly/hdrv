@@ -1,6 +1,6 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls.Material
 import Hdrv 1.0
 
 
@@ -10,6 +10,7 @@ ApplicationWindow {
   visible: true
   color: 'black'
   title: images.current.name + ' - hdrv 0.6'
+  Material.accent: Material.DeepOrange
 
   function loadNextFile(prev) {
     var url = images.nextFile(prev);
@@ -144,14 +145,14 @@ ApplicationWindow {
         enabled: imagePropertiesButton.checked
         focus: imagePropertiesButton.checked
         Layout.fillHeight: true
-        Layout.preferredWidth: 240
+        Layout.minimumWidth: 280
       }
 
       AppSettings {
         id: settingsPane
         visible: settingsButton.checked
         Layout.fillHeight: true
-        Layout.preferredWidth: 240
+        Layout.minimumWidth: 280
       }
     }
 
