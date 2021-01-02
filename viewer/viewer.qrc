@@ -1,4 +1,7 @@
 <RCC>
+  <qresource prefix="/">
+    <file>qtquickcontrols2.conf</file>
+  </qresource>
   <qresource prefix="/hdrv">
     <file>view/ExportButton.qml</file>
     <file>view/Main.qml</file>

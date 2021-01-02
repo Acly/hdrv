@@ -10,7 +10,6 @@ ApplicationWindow {
   visible: true
   color: 'black'
   title: images.current.name + ' - hdrv 0.6'
-  Material.accent: Material.DeepOrange
 
   function loadNextFile(prev) {
     var url = images.nextFile(prev);

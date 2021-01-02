@@ -25,7 +25,7 @@ Rectangle {
 
     spacing: 10
 
-    Column {
+    ColumnLayout {
       Layout.fillWidth: true
       Text {
         id: renderingHeader
@@ -41,8 +41,7 @@ Rectangle {
       }
       Slider {
         id: scaleSlider
-        anchors.left: parent.left
-        anchors.right: parent.right
+        Layout.fillWidth: true
         from: -4
         to: 4
         stepSize: 1.0
@@ -59,8 +58,7 @@ Rectangle {
       }
       Slider {
         id: brightnessSlider
-        anchors.left: parent.left
-        anchors.right: parent.right
+        Layout.fillWidth: true
         from: images.current.minBrightness
         to: images.current.maxBrightness
         stepSize: 0.1
@@ -78,8 +76,7 @@ Rectangle {
       }
       Slider {
         id: gammaSlider
-        anchors.left: parent.left
-        anchors.right: parent.right
+        Layout.fillWidth: true
         from: images.current.minGamma
         to: images.current.maxGamma
         stepSize: 0.1
@@ -98,7 +95,7 @@ Rectangle {
       }
     }
 
-    Column {
+    ColumnLayout {
       Text {
         text: '<b>Comparison</b>'
         visible: images.current.isComparison
