@@ -41,7 +41,7 @@ std::string clsidToString(CLSID const& clsid)
   wchar_t wclsid[MAX_PATH];
   int wideSize = StringFromGUID2(clsid, wclsid, ARRAYSIZE(wclsid));
   int mbSize = WideCharToMultiByte(CP_UTF8, 0, wclsid, wideSize, nullptr, 0, nullptr, nullptr);
-  std::string result(mbSize, 0);
+  std::string result(mbSize - 1, 0);
   WideCharToMultiByte(CP_UTF8, 0, wclsid, wideSize, result.data(), mbSize, nullptr, nullptr);
   return result;
 }
