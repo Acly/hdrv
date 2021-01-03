@@ -26,6 +26,18 @@ Rectangle {
     spacing: 10
 
     ColumnLayout {
+      visible: images.current.hasLayers
+      Layout.fillWidth: true
+      Text { text: '<b>Image</b>' }
+      ComboBox {
+        Layout.fillWidth: true
+        model: images.current.layers
+        onCurrentIndexChanged: images.current.layer = currentIndex
+        currentIndex: images.current.layer
+      }
+    }
+
+    ColumnLayout {
       Layout.fillWidth: true
       Text {
         id: renderingHeader
@@ -100,17 +112,19 @@ Rectangle {
         text: '<b>Comparison</b>'
         visible: images.current.isComparison
       }
-      RadioButton {
-        id: differenceButton
-        text: 'Difference'
-        visible: images.current.isComparison
-        ButtonGroup.group: comparisonModeGroup
-      }
-      RadioButton {
-        id: sideBySideButton
-        text: 'Side by side'
-        visible: images.current.isComparison
-        ButtonGroup.group: comparisonModeGroup
+      Row {
+        RadioButton {
+          id: differenceButton
+          text: 'Difference'
+          visible: images.current.isComparison
+          ButtonGroup.group: comparisonModeGroup
+        }
+        RadioButton {
+          id: sideBySideButton
+          text: 'Side by side'
+          visible: images.current.isComparison
+          ButtonGroup.group: comparisonModeGroup
+        }
       }
       ButtonGroup {
         id: comparisonModeGroup

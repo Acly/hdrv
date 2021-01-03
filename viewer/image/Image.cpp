@@ -20,7 +20,10 @@
 
 #include <array>
 #include <fstream>
+#include <string>
 #include <string_view>
+
+using namespace std::literals;
 
 namespace hdrv {
 
@@ -44,15 +47,16 @@ Image Image::makeEmpty()
   return Image(1, 1, 1, Byte, std::move(data));
 }
 
-float Image::value(int x, int y, int channel) const
+float Image::value(int x, int y, int channel, int layer) const
 {
-  auto i = ((height() - y - 1) * width() + x) * channels() + channel;
+  auto i = ((height() - y - 1) * width() + x) * channels(layer) + channel;
+  auto offset = layer == 0 ? 0 : layers_[layer].offset;
   if (format_ == Float) {
     float result;
-    memcpy(&result, data() + i * sizeof(float), sizeof(float));
+    memcpy(&result, data() + offset + i * sizeof(float), sizeof(float));
     return result;
   } else {
-    return (float)data_[i];
+    return (float)data_[offset + i];
   }
 }
 
@@ -286,7 +290,7 @@ inline bool operator<(EXRChannel const& a, EXRChannel const& b) {
 
 struct EXRLayer
 {
-  std::string_view name;
+  std::string name;
   std::array<EXRChannel, 4> channels;
   int channelCount = 0;
 };
@@ -297,52 +301,78 @@ Result<Image> Image::loadEXR(std::byte const* inputMemory, size_t size)
   char const* err = nullptr;
 
   EXRVersion exrVersion;
-  EXRImage exrImage;
-  EXRHeader exrHeader;
-
-  InitEXRHeader(&exrHeader);
-
   EXR_CHECK(ParseEXRVersionFromMemory(&exrVersion, memory, size),
             "Failed to parse EXR version header");
 
-  EXR_CHECK(ParseEXRHeaderFromMemory(&exrHeader, &exrVersion, memory, size, &err),
-            "Failed to parse EXR header");
-
-  for (int i = 0; i < exrHeader.num_channels; ++i) {
-    exrHeader.requested_pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT;
+  EXRHeader exrHeader;
+  EXRHeader* exrHeaderPtr = &exrHeader;
+  EXRHeader** exrHeaders = &exrHeaderPtr;
+  int exrHeaderCount = 1;
+  if (exrVersion.multipart) {
+    EXR_CHECK(ParseEXRMultipartHeaderFromMemory(&exrHeaders, &exrHeaderCount, &exrVersion, memory, size, &err),
+              "Failed to parse EXR multipart header");
+  } else {
+    InitEXRHeader(&exrHeader);
+    EXR_CHECK(ParseEXRHeaderFromMemory(&exrHeader, &exrVersion, memory, size, &err),
+              "Failed to parse EXR header");
   }
 
+  for (int h = 0; h < exrHeaderCount; ++h) {
+    EXRHeader& header = *exrHeaders[h];
+    for (int i = 0; i < header.num_channels; ++i) {
+      header.requested_pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT;
+    }
+  }
+
+  EXRImage exrImage;
   InitEXRImage(&exrImage);
-  EXR_CHECK(LoadEXRImageFromMemory(&exrImage, &exrHeader, memory, size, &err),
-            "Failed to decode EXR image");
+  if (exrVersion.multipart) {
+    EXR_CHECK(LoadEXRMultipartImageFromMemory(&exrImage, (const EXRHeader**)exrHeaders, exrHeaderCount, memory, size, &err),
+              "Failed to decode multipart EXR images");
+  } else {
+    EXR_CHECK(LoadEXRImageFromMemory(&exrImage, &exrHeader, memory, size, &err),
+              "Failed to decode EXR image");
+  }
 
   EXRLayer defaultLayer;
   std::vector<EXRLayer> layers;
   int totalChannels = 0;
 
-  // EXR channels are typically named A, B, G, R (ordered alphabetically).
-  // However the file may also contain additional layers using dot-separated
-  // naming scheme. And technically channels can have any name and occur in any order.
-  for (int i = 0; i < exrHeader.num_channels; ++i) {
-    std::string_view fullName = exrHeader.channels[i].name;
-    std::string_view channelName = fullName;
-    EXRLayer* layer = nullptr;
-    if (auto n = fullName.rfind('.'); n == std::string_view::npos) {
-      layer = &defaultLayer;
-    } else {
-      auto layerName = fullName.substr(0, n);
-      channelName = fullName.substr(n + 1);
-      auto compareName = [&](auto& l) { return l.name == layerName; };
-      if (auto x = std::find_if(layers.begin(), layers.end(), compareName); x != layers.end()) {
-        layer = &(*x);
+  for (int h = 0; h < exrHeaderCount; ++h) {
+    EXRHeader& header = *exrHeaders[h];
+
+    // EXR channels are typically named A, B, G, R (ordered alphabetically).
+    // However the file may also contain additional layers using dot-separated
+    // naming scheme. And technically channels can have any name and occur in any order.
+    for (int i = 0; i < header.num_channels; ++i) {
+      std::string_view fullName = header.channels[i].name;
+      std::string_view channelName = fullName;
+      auto n = fullName.rfind('.');
+      EXRLayer* layer = nullptr;
+      if (n == std::string_view::npos && h == 0) {
+        layer = &defaultLayer;
+        layer->name = header.name;
       } else {
-        layers.push_back(EXRLayer{layerName, {}, 0});
-        layer = &layers.back();
+        std::string layerName = header.name;
+        if (n != std::string_view::npos) {
+          if (!layerName.empty()) {
+            layerName += " - ";
+          }
+          layerName += std::string(fullName.substr(0, n));
+          channelName = fullName.substr(n + 1);
+        }
+        auto compareName = [&](auto& l) { return l.name == layerName; };
+        if (auto x = std::find_if(layers.begin(), layers.end(), compareName); x != layers.end()) {
+          layer = &(*x);
+        } else {
+          layers.push_back(EXRLayer{layerName, {}, 0});
+          layer = &layers.back();
+        }
       }
-    }
-    if (layer->channelCount < 4) {
-      layer->channels[layer->channelCount++] = EXRChannel{channelName, i};
-      ++totalChannels;
+      if (layer->channelCount < 4) {
+        layer->channels[layer->channelCount++] = EXRChannel{channelName, i};
+        ++totalChannels;
+      }
     }
   }
 
@@ -382,6 +412,16 @@ Result<Image> Image::loadEXR(std::byte const* inputMemory, size_t size)
     Q_ASSERT(dataOffset <= resultData.size());
   }
   Q_ASSERT(dataOffset == resultData.size());
+
+  FreeEXRImage(&exrImage);
+  if (exrVersion.multipart) {
+    for (int i = 0; i < exrHeaderCount; ++i) {
+      FreeEXRHeader(exrHeaders[i]);
+    }
+    free(exrHeaders);
+  } else {
+    FreeEXRHeader(exrHeaderPtr);
+  }
 
   return Image(exrImage.width, exrImage.height, defaultLayer.channelCount, Image::Float,
                std::move(resultData), std::move(resultLayers));

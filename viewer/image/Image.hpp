@@ -49,12 +49,14 @@ public:
 
   int width() const { return width_; }
   int height() const { return height_; }
-  int channels() const { return channels_; }
+  int channels(int layer = 0) const { return layer == 0 ? channels_ : layers_[layer].channels; }
   int pixelSizeInBytes() const { return format_ == Byte ? sizeof(uint8_t) : sizeof(float); }
   int sizeInBytes() const { return width_ * height_ * channels_ * pixelSizeInBytes(); }
   Format format() const { return format_; }
   uint8_t const* data() const { return data_.data(); }
-  float value(int x, int y, int channel) const;
+  float value(int x, int y, int channel, int layer = 0) const;
+
+  std::vector<Layer> const& layers() const { return layers_; }
 
   Result<bool> storePFM(std::string const& path) const;
   Result<bool> storePIC(std::string const& path) const;

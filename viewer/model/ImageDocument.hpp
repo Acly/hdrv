@@ -3,6 +3,7 @@
 #include <memory>
 #include <optional>
 
+#include <QList>
 #include <QObject>
 #include <QSize>
 #include <QPoint>
@@ -40,6 +41,9 @@ class ImageDocument : public QObject
   Q_PROPERTY(bool isComparison READ isComparison NOTIFY isComparisonChanged)
   Q_PROPERTY(ComparisonMode comparisonMode READ comparisonMode WRITE setComparisonMode NOTIFY comparisonModeChanged)
   Q_PROPERTY(float comparisonSeparator READ comparisonSeparator WRITE setComparisonSeparator NOTIFY comparisonSeparatorChanged)
+  Q_PROPERTY(bool hasLayers READ hasLayers NOTIFY propertyChanged)
+  Q_PROPERTY(QList<QString> layers READ layers NOTIFY propertyChanged)
+  Q_PROPERTY(int layer READ layer WRITE setLayer NOTIFY layerChanged)
 
 public:
   enum class ComparisonMode { Difference, SideBySide };
@@ -74,7 +78,7 @@ public:
   int width() const { return image_->width();  }
   int height() const { return image_->height(); }
   QSize size() const { return QSize(image_->width(), image_->height()); }
-  int channels() const { return image_->channels(); }
+  int channels() const;
   float scale() const { return scale_; }
   qreal brightness() const { return brightness_; }
   qreal minBrightness() const { return -10.0; }
@@ -93,6 +97,9 @@ public:
   std::optional<Comparison> const& comparison() const { return comparison_; }
   ComparisonMode comparisonMode() const { return comparison_.value_or(Comparison()).mode; }
   float comparisonSeparator() const { return comparison_.value_or(Comparison()).separator; }
+  bool hasLayers() const { return image_->layers().size() > 1; }
+  QList<QString> layers() const;
+  int layer() const { return layer_; }
 
   enum class ErrorCategory { Image, Comparison, Generic };
   void setError(QString const& errorText, ErrorCategory category);
@@ -106,6 +113,7 @@ public:
   void setCurrentPixel(QPoint index);
   void setComparisonMode(ComparisonMode mode);
   void setComparisonSeparator(float value);
+  void setLayer(int layer);
 
   Q_INVOKABLE void resetError();
   Q_INVOKABLE void store(QUrl const& url);
@@ -125,6 +133,7 @@ signals:
   void comparisonModeChanged();
   void comparisonSeparatorChanged();
   void fileTypeChanged();
+  void layerChanged();
 
 private:
   typedef std::shared_ptr<Result<Image>> LoadResult;
@@ -153,6 +162,7 @@ private:
   QVector4D pixelValue_;
   std::shared_ptr<Image> image_;
   std::optional<Comparison> comparison_;
+  int layer_ = 0;
   QFutureWatcher<LoadResult>* watcher_ = nullptr;
   QFutureWatcher<LoadResult>* comparisonWatcher_ = nullptr;
 };

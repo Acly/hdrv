@@ -10,6 +10,8 @@
 
 #include <model/ImageCollection.hpp>
 
+#include <algorithm>
+
 namespace hdrv {
 
 std::shared_ptr<Image> createDefaultImage()
@@ -111,6 +113,24 @@ QString ImageDocument::fileType() const
   }
 }
 
+int ImageDocument::channels() const
+{ // clamp layer_ since QML combo sets it to -1 if it is not populated
+  return image_->channels(std::clamp(layer_, 0, int(image_->layers().size())));
+}
+
+QList<QString> ImageDocument::layers() const
+{
+  QList<QString> list;
+  for (auto&& layer : image_->layers()) {
+    if (layer.name.empty()) {
+      list.push_back(QString("Default"));
+    } else {
+      list.push_back(QString::fromStdString(layer.name));
+    }
+  }
+  return list;
+}
+
 bool ImageDocument::isDefault() const { return url() == defaultUrl(); }
 
 void ImageDocument::resetError()
@@ -206,6 +226,15 @@ void ImageDocument::setComparisonSeparator(float value)
   }
 }
 
+void ImageDocument::setLayer(int layer)
+{
+  if (layer_ != layer) {
+    layer_ = layer;
+    emit layerChanged();
+    emit propertyChanged();
+  }
+}
+
 void ImageDocument::store(QUrl const& url)
 {
   QFileInfo file(url.toLocalFile());
@@ -225,13 +254,14 @@ void ImageDocument::store(QUrl const& url)
 QVector4D ImageDocument::pixelValue() const
 {
   QVector4D texel;
-  texel.setX(image_->value(pixelPosition_.x(), pixelPosition_.y(), 0));
+  int l = std::clamp(layer_, 0, int(image_->layers().size()));
+  texel.setX(image_->value(pixelPosition_.x(), pixelPosition_.y(), 0, l));
   if (channels() > 1) {
-    texel.setY(image_->value(pixelPosition_.x(), pixelPosition_.y(), 1));
+    texel.setY(image_->value(pixelPosition_.x(), pixelPosition_.y(), 1, l));
     if (channels() > 2) {
-      texel.setZ(image_->value(pixelPosition_.x(), pixelPosition_.y(), 2));
+      texel.setZ(image_->value(pixelPosition_.x(), pixelPosition_.y(), 2, l));
       if (channels() > 3) {
-        texel.setW(image_->value(pixelPosition_.x(), pixelPosition_.y(), 3));
+        texel.setW(image_->value(pixelPosition_.x(), pixelPosition_.y(), 3, l));
       }
     }
   }

@@ -56,14 +56,15 @@ QOpenGLTexture::TextureFormat format(Image const& image)
   }
 }
 
-QOpenGLTexture::PixelFormat pixelFormat(Image const& image)
+QOpenGLTexture::PixelFormat pixelFormat(int channelCount)
 {
-  switch (image.channels()) {
+  switch (channelCount) {
     case 1: return QOpenGLTexture::Luminance;
+    case 2: return QOpenGLTexture::RG;
     case 3: return QOpenGLTexture::RGB;
     case 4: return QOpenGLTexture::RGBA;
     default:
-      qWarning() << "Cannot render image with " << image.channels() << " channels.";
+      qWarning() << "Cannot render image with " << channelCount << " channels.";
       return QOpenGLTexture::Luminance;
   }
 }
@@ -73,22 +74,35 @@ QOpenGLTexture::PixelType pixelType(Image const& image)
   return image.format() == Image::Float ? QOpenGLTexture::PixelType::Float32 : QOpenGLTexture::PixelType::UInt8;
 }
 
-std::unique_ptr<QOpenGLTexture> createTexture(Image const& image)
+std::unique_ptr<QOpenGLTexture> createTexture(Image const& image, Image::Layer const& layer)
 {
   auto texture = std::make_unique<QOpenGLTexture>(QOpenGLTexture::Target2D);
   texture->setSize(image.width(), image.height());
   texture->setFormat(format(image));
-  texture->allocateStorage(pixelFormat(image), pixelType(image));
-  texture->setData(pixelFormat(image), pixelType(image), image.data());
+  texture->allocateStorage(pixelFormat(layer.channels), pixelType(image));
+  texture->setData(pixelFormat(layer.channels), pixelType(image), image.data() + layer.offset);
   texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
   texture->setMagnificationFilter(QOpenGLTexture::Nearest);
   texture->setWrapMode(QOpenGLTexture::ClampToBorder);
   texture->generateMipMaps();
-  if (image.channels() == 1) {
+  if (layer.channels == 1) {
     texture->setSwizzleMask(QOpenGLTexture::RedValue, QOpenGLTexture::RedValue,
                             QOpenGLTexture::RedValue, QOpenGLTexture::OneValue);
   }
   return texture;
+}
+
+std::vector<std::unique_ptr<QOpenGLTexture>> createTextures(Image const& image)
+{
+  std::vector<std::unique_ptr<QOpenGLTexture>> result;
+  if (image.layers().empty()) {
+    result.push_back(createTexture(image, Image::Layer{"", image.channels(), 0}));
+  } else {
+    for (auto& layer : image.layers()) {
+      result.push_back(createTexture(image, layer));
+    }
+  }
+  return result;
 }
 
 QVector2D texturePosition(QVector2D regionSize, QVector2D imageSize, QVector2D imagePosition)
@@ -120,8 +134,8 @@ void ImageRenderer::updateImages(std::vector<ImageDocument *> const& images)
   // Create textures for new images
   auto createTextureFor = [this](std::shared_ptr<Image> const& image) {
     auto & tex = textures_[image];
-    if (!tex) {
-      tex = createTexture(*image);
+    if (tex.empty()) {
+      tex = createTextures(*image);
     }
   };
   for (auto doc : images) {
@@ -141,7 +155,17 @@ void ImageRenderer::init()
     initializeOpenGLFunctions();
     program_ = createProgram();
   }
+}
 
+QOpenGLTexture& ImageRenderer::findTexture(std::shared_ptr<Image> const& image, int layer)
+{
+  auto i = textures_.find(image);
+  Q_ASSERT(i != textures_.end());
+  if (i->second.size() == 1) {
+    return *i->second[0];
+  }   
+  Q_ASSERT(layer < i->second.size());
+  return *i->second[layer];
 }
 
 void ImageRenderer::paint()
@@ -156,7 +180,7 @@ void ImageRenderer::paint()
 
   auto const& region = renderRegion_;
   auto const& image = *current_;
-  auto & texture = *textures_[current_];
+  auto& texture = findTexture(current_, layer_);
   QVector2D regionSize(float(region.size.width()), float(region.size.height()));
   QVector2D imageSize(float(image.width()) * settings_.scale, float(image.height()) * settings_.scale);
 
@@ -170,7 +194,7 @@ void ImageRenderer::paint()
   program_->setUniformValue("gamma", current_->format() == Image::Float ? 1.0f / settings_.gamma : 1.0f);
   program_->setUniformValue("alphaMode", (int)settings_.alphaMode);
   if (comparison_) {
-    textures_[comparison_->image]->bind(1);
+    findTexture(comparison_->image, 0).bind(1);
     program_->setUniformValue("comparison", 1);
     program_->setUniformValue("mode", (int)comparison_->mode);
     program_->setUniformValue("separator", comparison_->separator);
