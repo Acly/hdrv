@@ -97,13 +97,13 @@ Rectangle {
         visible: images.current.isFloat
       }
 
-      Text { text: 'Alpha Mode' }
+      Text { text: 'Display Mode' }
       ComboBox {
-        id: 'alphaModeSelection'
+        id: 'displayModeSelection'
         Layout.fillWidth: true
         model: [ "Default", "No Alpha", "Alpha Only" ]
-        onCurrentIndexChanged: images.current.alphaMode = currentIndex;
-        currentIndex: images.current.alphaMode
+        onCurrentIndexChanged: images.current.displayMode = currentIndex;
+        currentIndex: images.current.displayMode
       }
     }
 

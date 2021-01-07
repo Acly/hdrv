@@ -35,8 +35,8 @@ Image::Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data)
   , data_(std::move(data))
 {}
 
-Image::Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data, std::vector<Layer>&& layers)
-  : Image(w, h, c, f, std::move(data))
+Image::Image(int w, int h, Format f, std::vector<uint8_t>&& data, std::vector<Layer>&& layers)
+  : Image(w, h, layers[0].channels, f, std::move(data))
 {
   layers_ = std::move(layers);
 }
@@ -292,8 +292,23 @@ struct EXRLayer
 {
   std::string name;
   std::array<EXRChannel, 4> channels;
+  int part = 0;
   int channelCount = 0;
 };
+
+Image::Display guessDisplay(EXRLayer const& layer, int pixelType) {
+  if (pixelType == TINYEXR_PIXELTYPE_UINT) {
+    return Image::Integer;
+  } else if (layer.channelCount <= 2 && layer.channels[0].name == "L") {
+    return Image::Luminance;
+  } else if (layer.channelCount == 3 && layer.channels[0].name == "X") {
+    return Image::Normal;
+  } else if (layer.channelCount == 1 && layer.channels[0].name == "Z") {
+    return Image::Depth;
+  } else {
+    return Image::Color;
+  }
+}
 
 Result<Image> Image::loadEXR(std::byte const* inputMemory, size_t size)
 {
@@ -320,17 +335,20 @@ Result<Image> Image::loadEXR(std::byte const* inputMemory, size_t size)
   for (int h = 0; h < exrHeaderCount; ++h) {
     EXRHeader& header = *exrHeaders[h];
     for (int i = 0; i < header.num_channels; ++i) {
-      header.requested_pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT;
+      header.requested_pixel_types[i] = (header.pixel_types[i] == TINYEXR_PIXELTYPE_UINT) ?
+        TINYEXR_PIXELTYPE_UINT : TINYEXR_PIXELTYPE_FLOAT;
     }
   }
 
-  EXRImage exrImage;
-  InitEXRImage(&exrImage);
+  std::vector<EXRImage> exrImages(exrHeaderCount);
+  for (auto& i : exrImages) {
+    InitEXRImage(&i);
+  }
   if (exrVersion.multipart) {
-    EXR_CHECK(LoadEXRMultipartImageFromMemory(&exrImage, (const EXRHeader**)exrHeaders, exrHeaderCount, memory, size, &err),
+    EXR_CHECK(LoadEXRMultipartImageFromMemory(exrImages.data(), (const EXRHeader**)exrHeaders, exrHeaderCount, memory, size, &err),
               "Failed to decode multipart EXR images");
   } else {
-    EXR_CHECK(LoadEXRImageFromMemory(&exrImage, &exrHeader, memory, size, &err),
+    EXR_CHECK(LoadEXRImageFromMemory(exrImages.data(), &exrHeader, memory, size, &err),
               "Failed to decode EXR image");
   }
 
@@ -365,10 +383,12 @@ Result<Image> Image::loadEXR(std::byte const* inputMemory, size_t size)
         if (auto x = std::find_if(layers.begin(), layers.end(), compareName); x != layers.end()) {
           layer = &(*x);
         } else {
-          layers.push_back(EXRLayer{layerName, {}, 0});
+          layers.emplace_back();
           layer = &layers.back();
+          layer->name = std::move(layerName);
         }
       }
+      layer->part = h;
       if (layer->channelCount < 4) {
         layer->channels[layer->channelCount++] = EXRChannel{channelName, i};
         ++totalChannels;
@@ -376,19 +396,24 @@ Result<Image> Image::loadEXR(std::byte const* inputMemory, size_t size)
     }
   }
 
-  layers.insert(layers.begin(), defaultLayer);
+  if (defaultLayer.channelCount > 0) {
+    layers.insert(layers.begin(), defaultLayer);
+  }
   for (auto& layer : layers) {
     std::sort(layer.channels.begin(), layer.channels.begin() + layer.channelCount);
   }
 
   // All layers are going to be stored in one big buffer. The layer structs remembers
   // the offset where a new layer starts.
+  int width = exrImages[0].width;
+  int height = exrImages[0].height;
   std::vector<Image::Layer> resultLayers(layers.size());
-  std::vector<uint8_t> resultData(totalChannels * exrImage.width * exrImage.height * sizeof(float));
+  std::vector<uint8_t> resultData(totalChannels * width * height * sizeof(float));
   size_t dataOffset = 0;
 
   for (int l = 0; l < int(layers.size()); ++l) {
     auto& layer = layers[l];
+    auto const& img = exrImages[layer.part];
     resultLayers[l].name = layer.name;
     resultLayers[l].offset = dataOffset;
 
@@ -397,23 +422,26 @@ Result<Image> Image::loadEXR(std::byte const* inputMemory, size_t size)
     for (int c = 0; c < layer.channelCount; ++c) {
       auto& channel = layer.channels[c];
       resultLayers[l].channels += 1;
-      for (int y = 0; y < exrImage.height; ++y) {
-        for (int x = 0; x < exrImage.width; ++x) {
-          int coord = y * exrImage.width + x;
-          int coordFlipped = (exrImage.height - y - 1) * exrImage.width + x;
-          auto src = exrImage.images[channel.index] + coord * sizeof(float);
+      resultLayers[l].display = guessDisplay(layer, exrHeaders[layer.part]->channels[channel.index].pixel_type);
+      for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+          int coord = y * width + x;
+          int coordFlipped = (height - y - 1) * width + x;
+          auto src = img.images[channel.index] + coord * sizeof(float);
           auto dst = resultData.data() + dataOffset
             + (coordFlipped * layer.channelCount + c) * sizeof(float);
           std::memcpy(dst, src, sizeof(float));
         }
       }
     }
-    dataOffset += exrImage.width * exrImage.height * layer.channelCount * sizeof(float);
+    dataOffset += img.width * img.height * layer.channelCount * sizeof(float);
     Q_ASSERT(dataOffset <= resultData.size());
   }
   Q_ASSERT(dataOffset == resultData.size());
 
-  FreeEXRImage(&exrImage);
+  for (auto& img : exrImages) {
+    FreeEXRImage(&img);
+  }
   if (exrVersion.multipart) {
     for (int i = 0; i < exrHeaderCount; ++i) {
       FreeEXRHeader(exrHeaders[i]);
@@ -423,8 +451,7 @@ Result<Image> Image::loadEXR(std::byte const* inputMemory, size_t size)
     FreeEXRHeader(exrHeaderPtr);
   }
 
-  return Image(exrImage.width, exrImage.height, defaultLayer.channelCount, Image::Float,
-               std::move(resultData), std::move(resultLayers));
+  return Image(width, height, Image::Float, std::move(resultData), std::move(resultLayers));
 }
 
 Result<Image> Image::loadEXR(std::string const& path)

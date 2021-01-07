@@ -61,7 +61,7 @@ ImageDocument::ImageDocument(QObject * parent)
 void ImageDocument::init()
 {
   QSettings settings;
-  alphaMode_ = (AlphaMode)settings.value("Rendering/AlphaMode").toInt();
+  displayMode_ = (DisplayMode)settings.value("Rendering/DisplayMode").toInt();
 }
 
 QFutureWatcher<ImageDocument::LoadResult>* ImageDocument::setupWatcher(QUrl const& url, bool comparison)
@@ -127,6 +127,9 @@ QList<QString> ImageDocument::layers() const
     } else {
       list.push_back(QString::fromStdString(layer.name));
     }
+  } 
+  if (image_->layers().empty()) {
+    list.push_back(QString("Default"));
   }
   return list;
 }
@@ -186,15 +189,15 @@ void ImageDocument::setGamma(qreal gamma)
   }
 }
 
-void ImageDocument::setAlphaMode(AlphaMode alphaMode)
+void ImageDocument::setDisplayMode(DisplayMode displayMode)
 {
-  if (alphaMode_ != alphaMode) {
-    alphaMode_ = alphaMode;
+  if (displayMode_ != displayMode) {
+    displayMode_ = displayMode;
 
     QSettings settings;
-    settings.setValue("Rendering/AlphaMode", QVariant((int)alphaMode));
+    settings.setValue("Rendering/DisplayMode", QVariant((int)displayMode));
 
-    emit alphaModeChanged();
+    emit displayModeChanged();
     emit propertyChanged();
   }
 }
@@ -263,6 +266,13 @@ QVector4D ImageDocument::pixelValue() const
       if (channels() > 3) {
         texel.setW(image_->value(pixelPosition_.x(), pixelPosition_.y(), 3, l));
       }
+    }
+  }
+  if (image_->layers().size() > l && image_->layers()[l].display == Image::Integer) {
+    for (int i = 0; i < channels(); ++i) {
+      uint32_t integer;
+      std::memcpy(&integer, &texel[i], sizeof(float));
+      texel[i] = float(integer);
     }
   }
   return texel;

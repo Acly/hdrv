@@ -85,7 +85,7 @@ std::unique_ptr<QOpenGLTexture> createTexture(Image const& image, Image::Layer c
   texture->setMagnificationFilter(QOpenGLTexture::Nearest);
   texture->setWrapMode(QOpenGLTexture::ClampToBorder);
   texture->generateMipMaps();
-  if (layer.channels == 1) {
+  if (layer.display == Image::Luminance || layer.display == Image::Depth) {
     texture->setSwizzleMask(QOpenGLTexture::RedValue, QOpenGLTexture::RedValue,
                             QOpenGLTexture::RedValue, QOpenGLTexture::OneValue);
   }
@@ -96,7 +96,8 @@ std::vector<std::unique_ptr<QOpenGLTexture>> createTextures(Image const& image)
 {
   std::vector<std::unique_ptr<QOpenGLTexture>> result;
   if (image.layers().empty()) {
-    result.push_back(createTexture(image, Image::Layer{"", image.channels(), 0}));
+    auto display = image.channels() == 1 ? Image::Luminance : Image::Color;
+    result.push_back(createTexture(image, Image::Layer{"", image.channels(), display, 0}));
   } else {
     for (auto& layer : image.layers()) {
       result.push_back(createTexture(image, layer));
@@ -192,7 +193,7 @@ void ImageRenderer::paint()
   program_->setUniformValue("regionSize", regionSize);
   program_->setUniformValue("brightness", std::pow(2.0f, settings_.brightness));
   program_->setUniformValue("gamma", current_->format() == Image::Float ? 1.0f / settings_.gamma : 1.0f);
-  program_->setUniformValue("alphaMode", (int)settings_.alphaMode);
+  program_->setUniformValue("display", (int)settings_.displayMode);
   if (comparison_) {
     findTexture(comparison_->image, 0).bind(1);
     program_->setUniformValue("comparison", 1);

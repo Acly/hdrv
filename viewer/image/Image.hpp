@@ -29,10 +29,12 @@ class Image
 {
 public:
   enum Format { Byte, Float };
+  enum Display { Color, Luminance, Depth, Normal, Integer };
 
   struct Layer {
     std::string name;
     int channels;
+    Display display;
     size_t offset;
   };
 
@@ -66,7 +68,7 @@ public:
   Result<Image> scaleByHalf() const;
 
   Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data);
-  Image(int w, int h, int c, Format f, std::vector<uint8_t>&& data, std::vector<Layer>&& layers);
+  Image(int w, int h, Format f, std::vector<uint8_t>&& data, std::vector<Layer>&& layers);
 
 private:
 

@@ -35,7 +35,7 @@ class ImageDocument : public QObject
   Q_PROPERTY(qreal minGamma READ minGamma CONSTANT FINAL)
   Q_PROPERTY(qreal maxGamma READ maxGamma CONSTANT FINAL)
   Q_PROPERTY(bool isFloat READ isFloat NOTIFY propertyChanged)
-  Q_PROPERTY(AlphaMode alphaMode READ alphaMode WRITE setAlphaMode NOTIFY alphaModeChanged)
+  Q_PROPERTY(DisplayMode displayMode READ displayMode WRITE setDisplayMode NOTIFY displayModeChanged)
   Q_PROPERTY(QPoint pixelPosition READ pixelPosition NOTIFY pixelPositionChanged)
   Q_PROPERTY(QVector4D pixelValue READ pixelValue NOTIFY pixelValueChanged)
   Q_PROPERTY(bool isComparison READ isComparison NOTIFY isComparisonChanged)
@@ -49,8 +49,8 @@ public:
   enum class ComparisonMode { Difference, SideBySide };
   Q_ENUMS(ComparisonMode)
   
-  enum class AlphaMode { Default, NoAlpha, AlphaOnly };
-  Q_ENUMS(AlphaMode)
+  enum class DisplayMode { Default, NoAlpha, AlphaOnly };
+  Q_ENUMS(DisplayMode)
 
   struct Comparison
   {
@@ -87,7 +87,7 @@ public:
   qreal minGamma() const { return 1.0; }
   qreal maxGamma() const { return 8.0; }
   bool isFloat() const { return image_->format() == Image::Float; }
-  AlphaMode alphaMode() const { return alphaMode_; }
+  DisplayMode displayMode() const { return displayMode_; }
   void const* pixels() const { return image_->data(); }
   std::shared_ptr<Image> const& image() { return image_; }
   QPoint pixelPosition() const { return pixelPosition_; }
@@ -109,7 +109,7 @@ public:
   void setScale(qreal scale);
   void setBrightness(qreal brightness);
   void setGamma(qreal gamma);
-  void setAlphaMode(AlphaMode alphaMode);
+  void setDisplayMode(DisplayMode displayMode);
   void setCurrentPixel(QPoint index);
   void setComparisonMode(ComparisonMode mode);
   void setComparisonSeparator(float value);
@@ -126,7 +126,7 @@ signals:
   void scaleChanged();
   void brightnessChanged();
   void gammaChanged();
-  void alphaModeChanged();
+  void displayModeChanged();
   void pixelPositionChanged();
   void pixelValueChanged();
   void isComparisonChanged();
@@ -157,7 +157,7 @@ private:
   qreal scale_ = 1.0f;
   qreal brightness_ = 0.0f;
   qreal gamma_ = 2.2f;
-  AlphaMode alphaMode_ = AlphaMode::Default;
+  DisplayMode displayMode_ = DisplayMode::Default;
   QPoint pixelPosition_;
   QVector4D pixelValue_;
   std::shared_ptr<Image> image_;

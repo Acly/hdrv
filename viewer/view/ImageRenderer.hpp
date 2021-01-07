@@ -27,7 +27,7 @@ struct ImageSettings
   float scale;
   float brightness;
   float gamma;
-  ImageDocument::AlphaMode alphaMode;
+  ImageDocument::DisplayMode displayMode;
 };
 
 class ImageRenderer : public QObject, protected QOpenGLFunctions
