@@ -15,7 +15,6 @@ GUI which displays HDR images, no bullshit.
 
 ## Build
 
-[![TravisBuildStatus](https://travis-ci.org/Acly/hdrv.svg?branch=master)](https://travis-ci.org/Acly/hdrv)
 ![AppVeyorBuildStatus](https://ci.appveyor.com/api/projects/status/github/Acly/hdrv?branch=master&svg=true)
 
 ### Prerequisites
@@ -29,23 +28,25 @@ GUI which displays HDR images, no bullshit.
 git clone https://github.com/Acly/hdrv.git hdrv
 ```
 
-### Windows - Visual Studio 2019
-Open the folder in Visual Studio to configure and build using its CMake/Ninja integration.
-
-Depending on where Qt6 is installed you may have to configure CMake with `-DCMAKE_PREFIX_PATH=<QT_ROOT_DIR>`.
-
-After building, runtime libraries can be copied with `windeployqt --qmldir viewer/view build/release/hdrv.exe`.
-
-
-### Linux
+### Configure and Build with CMake
 Build from the command line using the typical CMake workflow.
 ```
 mkdir build
 cd build
 cmake ..
-make
+cmake --build .
 ```
 
+### Windows - Visual Studio 2019
+Open the folder in Visual Studio to configure and build using its CMake/Ninja integration.
+
+If Qt6 is not found automatically you can add its location to the CMake command line with eg. `-DCMAKE_PREFIX_PATH=C:\Qt\6.0.0\msvc2019_64`.
+
+After building, runtime libraries can be copied with `windeployqt --qmldir viewer/view build/release/hdrv.exe`.
+
+### Linux
+
+If Qt6 is not found automatically you can add its location to the CMake command line with eg. `-DCMAKE_PREFIX_PATH=$HOME/Qt/6.0.0/gcc_64`.
 
 ## Use
 
@@ -73,19 +74,18 @@ A thumbnail shell integration is present for Windows in the subproject _thumbnai
 On x86 Windows installations the project must be compiled as x86 target and vice versa for x64 Windows installations to be compatible.
 
 You can use the buttons in the UI to (un)install the thumbnail handler.
-Note that you should not move/delete the `hdrv_thumbnails.dll` without uninstalling it beforehand.
+Note that you should not move/delete the `thumbnails.dll` without uninstalling it beforehand.
 
 To register the extension manually use an **elevated shell** and type:
 ```
-regsvr32 hdrv_thumbnails.dll
+regsvr32 thumbnails.dll
 ```
 Removing the extension works by adding `/u` to the command:
 ```
-regsvr32 /u hdrv_thumbnails.dll
+regsvr32 /u thumbnails.dll
 ```
 
 ## TODO
 
 * Show more stats (average / maximum / minimum color)
 * More options for tone mapping
-* EXR: support tiled images

@@ -9,6 +9,7 @@ environment:
   CC: /usr/bin/gcc-9
   CXX: /usr/bin/g++-9
 install:
+  - sh: sudo apt update
   - sh: sudo apt-get -y install libgl1-mesa-dev
 before_build:
   - mkdir build

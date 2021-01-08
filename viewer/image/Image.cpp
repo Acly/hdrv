@@ -518,7 +518,7 @@ Result<bool> Image::storeEXR(std::string const& path) const
       }
       int d = channelsAdded++;
       pixelPointers[d] = perChannel.data() + index * w * h;
-      snprintf(channelInfos[d].name, 256, name);
+      snprintf(channelInfos[d].name, 256, "%s", name);
       pixelTypes[d] = TINYEXR_PIXELTYPE_FLOAT;
       requestedPixelTypes[d] = TINYEXR_PIXELTYPE_FLOAT;
     };

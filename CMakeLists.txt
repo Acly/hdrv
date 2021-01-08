@@ -56,7 +56,7 @@ target_link_libraries(hdrv PRIVATE pfm pic tinyexr Qt6::Core Qt6::Quick Qt6::Con
 
 if (WIN32)
 
-add_library(hdrv_thumbnails SHARED
+add_library(thumbnails SHARED
     thumbnails/ClassFactory.cpp
     thumbnails/ClassFactory.hpp
     thumbnails/Registry.cpp
@@ -68,9 +68,9 @@ add_library(hdrv_thumbnails SHARED
     viewer/image/Image.cpp
     viewer/image/Image.hpp
 )
-target_include_directories(hdrv_thumbnails PRIVATE viewer thumbnails)
-target_compile_definitions(hdrv_thumbnails PRIVATE NOMINMAX)
-target_link_libraries(hdrv_thumbnails PRIVATE pfm pic tinyexr Qt6::Core Qt6::Gui)
+target_include_directories(thumbnails PRIVATE viewer thumbnails)
+target_compile_definitions(thumbnails PRIVATE NOMINMAX)
+target_link_libraries(thumbnails PRIVATE pfm pic tinyexr Qt6::Core Qt6::Gui)
 
 endif(WIN32)
 
