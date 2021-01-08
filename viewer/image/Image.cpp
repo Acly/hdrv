@@ -423,15 +423,29 @@ Result<Image> Image::loadEXR(std::byte const* inputMemory, size_t size)
       auto& channel = layer.channels[c];
       resultLayers[l].channels += 1;
       resultLayers[l].display = guessDisplay(layer, exrHeaders[layer.part]->channels[channel.index].pixel_type);
-      for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-          int coord = y * width + x;
-          int coordFlipped = (height - y - 1) * width + x;
-          auto src = img.images[channel.index] + coord * sizeof(float);
-          auto dst = resultData.data() + dataOffset
-            + (coordFlipped * layer.channelCount + c) * sizeof(float);
-          std::memcpy(dst, src, sizeof(float));
+
+      auto copyTile = [&](int offsetX, int offsetY, int tileWidth, int tileHeight, unsigned char const* pixels) {
+        for (int y = 0; y < tileHeight; ++y) {
+          for (int x = 0; x < tileWidth; ++x) {
+            int srcCoord = y * tileWidth + x;
+            int dstCoord = (height - offsetY - y - 1) * width + (offsetX + x);
+            auto src = pixels + srcCoord * sizeof(float);
+            auto dst = resultData.data() + dataOffset
+              + (dstCoord * layer.channelCount + c) * sizeof(float);
+            std::memcpy(dst, src, sizeof(float));
+          }
         }
+      };
+
+      if (img.images) {
+        copyTile(0, 0, width, height, img.images[channel.index]);
+      } else {
+        for (int t = 0; t < img.num_tiles; ++t) {
+          auto& tile = img.tiles[t];
+          int x = tile.offset_x * img.tiles[0].width;
+          int y = tile.offset_y * img.tiles[0].height;
+          copyTile(x, y, tile.width, tile.height, tile.images[channel.index]);
+        }      
       }
     }
     dataOffset += img.width * img.height * layer.channelCount * sizeof(float);
