@@ -29,7 +29,7 @@ target_include_directories(pic PUBLIC dependencies/pic/include)
 add_library(tinyexr INTERFACE)
 target_include_directories(tinyexr INTERFACE dependencies/tinyexr)
 
-add_executable(hdrv
+add_executable(hdrv WIN32
     viewer/Main.cpp
     viewer/viewer.qrc
     viewer/image/Image.cpp

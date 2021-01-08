@@ -9,7 +9,7 @@ ApplicationWindow {
   height: 800
   visible: true
   color: 'black'
-  title: images.current.name + ' - hdrv 0.6'
+  title: images.current.name + ' - hdrv'
 
   function loadNextFile(prev) {
     var url = images.nextFile(prev);
