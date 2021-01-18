@@ -43,10 +43,7 @@ ListView {
           id: busyIndicator
           anchors.left: parent.left
           anchors.top: parent.top
-          anchors.leftMargin: 3
-          anchors.topMargin: 2
-          width: imageTabIcon.width
-          height: imageTabIcon.height
+          anchors.bottom: parent.bottom
           running: busy
         }
 
