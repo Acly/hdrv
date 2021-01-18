@@ -1,7 +1,6 @@
-import QtQuick 2.5
-import QtQuick.Controls 1.2
-import QtQuick.Controls.Styles 1.4
-import QtQuick.Layouts 1.2
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls.Material
 import Hdrv 1.0
 
 
@@ -10,7 +9,7 @@ ApplicationWindow {
   height: 800
   visible: true
   color: 'black'
-  title: images.current.name + ' - hdrv 0.6'
+  title: images.current.name + ' - hdrv'
 
   function loadNextFile(prev) {
     var url = images.nextFile(prev);
@@ -25,81 +24,46 @@ ApplicationWindow {
 
     Rectangle {
       color: '#404040'
-      Layout.preferredHeight: 24
+      Layout.preferredHeight: 28
       Layout.fillWidth: true
 
       RowLayout {
         anchors.fill: parent
 
-        TabBar {
+        TabNav {
           Layout.fillWidth: true
           Layout.fillHeight: true
         }
 
-        Button {
-          id: serverButton
-          Layout.preferredWidth: 30
-          Layout.preferredHeight: 20
-          Layout.alignment: Qt.AlignBottom
-          iconSource: 'qrc:/hdrv/media/SingleInstance.png'
-          style: ButtonStyle {
-            background: Item {
-              Rectangle {
-                anchors.fill: parent
-                anchors.rightMargin: 4
-                anchors.leftMargin: 4
-                color: server.running || control.hovered ? '#D9D9FA' : '#C0C0C0'
-              }
-            }
-          }
-          onClicked: {
-            if(server.running) {
-              server.stop();
-            } else {
-              client.remoteStopServer();
-              server.start();
-            }
-          }
-        }
-
-        Button {
+        ToolButton {
           id: imagePropertiesButton
-          Layout.preferredWidth: 26
-          Layout.preferredHeight: 20
           Layout.alignment: Qt.AlignBottom
-          iconSource: 'qrc:/hdrv/media/Properties.png'
+          Layout.preferredHeight: parent.height - 4
+          Layout.preferredWidth: settingsButton.height
           checkable: true
-          onClicked: if (settingsButton.checked) settingsButton.checked = false;
-          style: ButtonStyle {
-            background: Item {
-              Rectangle {
-                anchors.fill: parent
-                anchors.rightMargin: 2
-                anchors.leftMargin: 2
-                color: control.checked || control.hovered ? '#FAFAFA' : '#C0C0C0'
-              }
-            }
+          contentItem: Image {
+            source: 'qrc:/hdrv/media/Properties.png'
           }
+          background: Rectangle {
+            color: parent.hovered || parent.checked ? '#FAFAFA' : '#C0C0C0'
+          }
+          onClicked: if (imagePropertiesButton.checked) settingsButton.checked = false;
         }
 
-        Button {
+        ToolButton {
           id: settingsButton
-          Layout.preferredWidth: 28
-          Layout.preferredHeight: 20
           Layout.alignment: Qt.AlignBottom
-          iconSource: 'qrc:/hdrv/media/Settings.png'
+          Layout.preferredHeight: parent.height - 4
+          Layout.preferredWidth: settingsButton.height
+          Layout.rightMargin: 4
           checkable: true
-          onClicked: if (imagePropertiesButton.checked) imagePropertiesButton.checked = false;
-          style: ButtonStyle {
-            background: Item {
-              Rectangle {
-                anchors.fill: parent
-                anchors.rightMargin: 4
-                anchors.leftMargin: 2
-                color: control.checked || control.hovered ? '#FAFAFA' : '#C0C0C0'
-              }
-            }
+          contentItem: Image {
+            source: 'qrc:/hdrv/media/Settings.png'
           }
+          background: Rectangle {
+            color: parent.hovered || parent.checked ? '#FAFAFA' : '#C0C0C0'
+          }
+          onClicked: if (settingsButton.checked) imagePropertiesButton.checked = false;
         }
       }
     }
@@ -180,14 +144,14 @@ ApplicationWindow {
         enabled: imagePropertiesButton.checked
         focus: imagePropertiesButton.checked
         Layout.fillHeight: true
-        Layout.preferredWidth: 240
+        Layout.minimumWidth: 280
       }
 
       AppSettings {
         id: settingsPane
         visible: settingsButton.checked
         Layout.fillHeight: true
-        Layout.preferredWidth: 240
+        Layout.minimumWidth: 280
       }
     }
 

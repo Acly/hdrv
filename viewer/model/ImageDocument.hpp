@@ -1,7 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
+#include <QList>
 #include <QObject>
 #include <QSize>
 #include <QPoint>
@@ -33,19 +35,22 @@ class ImageDocument : public QObject
   Q_PROPERTY(qreal minGamma READ minGamma CONSTANT FINAL)
   Q_PROPERTY(qreal maxGamma READ maxGamma CONSTANT FINAL)
   Q_PROPERTY(bool isFloat READ isFloat NOTIFY propertyChanged)
-  Q_PROPERTY(AlphaMode alphaMode READ alphaMode WRITE setAlphaMode NOTIFY alphaModeChanged)
+  Q_PROPERTY(DisplayMode displayMode READ displayMode WRITE setDisplayMode NOTIFY displayModeChanged)
   Q_PROPERTY(QPoint pixelPosition READ pixelPosition NOTIFY pixelPositionChanged)
   Q_PROPERTY(QVector4D pixelValue READ pixelValue NOTIFY pixelValueChanged)
   Q_PROPERTY(bool isComparison READ isComparison NOTIFY isComparisonChanged)
   Q_PROPERTY(ComparisonMode comparisonMode READ comparisonMode WRITE setComparisonMode NOTIFY comparisonModeChanged)
   Q_PROPERTY(float comparisonSeparator READ comparisonSeparator WRITE setComparisonSeparator NOTIFY comparisonSeparatorChanged)
+  Q_PROPERTY(bool hasLayers READ hasLayers NOTIFY propertyChanged)
+  Q_PROPERTY(QList<QString> layers READ layers NOTIFY propertyChanged)
+  Q_PROPERTY(int layer READ layer WRITE setLayer NOTIFY layerChanged)
 
 public:
   enum class ComparisonMode { Difference, SideBySide };
   Q_ENUMS(ComparisonMode)
   
-  enum class AlphaMode { Default, NoAlpha, AlphaOnly };
-  Q_ENUMS(AlphaMode)
+  enum class DisplayMode { Default, NoAlpha, AlphaOnly };
+  Q_ENUMS(DisplayMode)
 
   struct Comparison
   {
@@ -73,7 +78,7 @@ public:
   int width() const { return image_->width();  }
   int height() const { return image_->height(); }
   QSize size() const { return QSize(image_->width(), image_->height()); }
-  int channels() const { return image_->channels(); }
+  int channels() const;
   float scale() const { return scale_; }
   qreal brightness() const { return brightness_; }
   qreal minBrightness() const { return -10.0; }
@@ -82,16 +87,19 @@ public:
   qreal minGamma() const { return 1.0; }
   qreal maxGamma() const { return 8.0; }
   bool isFloat() const { return image_->format() == Image::Float; }
-  AlphaMode alphaMode() const { return alphaMode_; }
+  DisplayMode displayMode() const { return displayMode_; }
   void const* pixels() const { return image_->data(); }
   std::shared_ptr<Image> const& image() { return image_; }
   QPoint pixelPosition() const { return pixelPosition_; }
   QVector4D pixelValue() const;
   bool isDefault() const;
   bool isComparison() const { return (bool)comparison_; }
-  boost::optional<Comparison> const& comparison() const { return comparison_; }
+  std::optional<Comparison> const& comparison() const { return comparison_; }
   ComparisonMode comparisonMode() const { return comparison_.value_or(Comparison()).mode; }
   float comparisonSeparator() const { return comparison_.value_or(Comparison()).separator; }
+  bool hasLayers() const { return image_->layers().size() > 1; }
+  QList<QString> layers() const;
+  int layer() const { return layer_; }
 
   enum class ErrorCategory { Image, Comparison, Generic };
   void setError(QString const& errorText, ErrorCategory category);
@@ -101,10 +109,11 @@ public:
   void setScale(qreal scale);
   void setBrightness(qreal brightness);
   void setGamma(qreal gamma);
-  void setAlphaMode(AlphaMode alphaMode);
+  void setDisplayMode(DisplayMode displayMode);
   void setCurrentPixel(QPoint index);
   void setComparisonMode(ComparisonMode mode);
   void setComparisonSeparator(float value);
+  void setLayer(int layer);
 
   Q_INVOKABLE void resetError();
   Q_INVOKABLE void store(QUrl const& url);
@@ -117,13 +126,14 @@ signals:
   void scaleChanged();
   void brightnessChanged();
   void gammaChanged();
-  void alphaModeChanged();
+  void displayModeChanged();
   void pixelPositionChanged();
   void pixelValueChanged();
   void isComparisonChanged();
   void comparisonModeChanged();
   void comparisonSeparatorChanged();
   void fileTypeChanged();
+  void layerChanged();
 
 private:
   typedef std::shared_ptr<Result<Image>> LoadResult;
@@ -147,11 +157,12 @@ private:
   qreal scale_ = 1.0f;
   qreal brightness_ = 0.0f;
   qreal gamma_ = 2.2f;
-  AlphaMode alphaMode_ = AlphaMode::Default;
+  DisplayMode displayMode_ = DisplayMode::Default;
   QPoint pixelPosition_;
   QVector4D pixelValue_;
   std::shared_ptr<Image> image_;
-  boost::optional<Comparison> comparison_;
+  std::optional<Comparison> comparison_;
+  int layer_ = 0;
   QFutureWatcher<LoadResult>* watcher_ = nullptr;
   QFutureWatcher<LoadResult>* comparisonWatcher_ = nullptr;
 };

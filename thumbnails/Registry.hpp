@@ -6,11 +6,6 @@
 
 #include <windows.h>
 
-// Why Microsoft, why?
-#ifdef min
-# undef min
-#endif
-
 class Registry
 {
 public:

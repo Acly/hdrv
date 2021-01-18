@@ -1,11 +1,16 @@
 #include <model/ImageDocument.hpp>
 
+#include <QtConcurrent>
 #include <QDir>
 #include <QFileInfo>
-#include <QtConcurrent>
+#include <QFutureWatcher>
 #include <QFileSystemWatcher>
+#include <QSettings>
+#include <QTimer>
 
 #include <model/ImageCollection.hpp>
+
+#include <algorithm>
 
 namespace hdrv {
 
@@ -56,7 +61,7 @@ ImageDocument::ImageDocument(QObject * parent)
 void ImageDocument::init()
 {
   QSettings settings;
-  alphaMode_ = (AlphaMode)settings.value("Rendering/AlphaMode").toInt();
+  displayMode_ = (DisplayMode)settings.value("Rendering/DisplayMode").toInt();
 }
 
 QFutureWatcher<ImageDocument::LoadResult>* ImageDocument::setupWatcher(QUrl const& url, bool comparison)
@@ -106,6 +111,27 @@ QString ImageDocument::fileType() const
   } else { // not float
     return "FormatByte";
   }
+}
+
+int ImageDocument::channels() const
+{ // clamp layer_ since QML combo sets it to -1 if it is not populated
+  return image_->channels(std::clamp(layer_, 0, int(image_->layers().size())));
+}
+
+QList<QString> ImageDocument::layers() const
+{
+  QList<QString> list;
+  for (auto&& layer : image_->layers()) {
+    if (layer.name.empty()) {
+      list.push_back(QString("Default"));
+    } else {
+      list.push_back(QString::fromStdString(layer.name));
+    }
+  } 
+  if (image_->layers().empty()) {
+    list.push_back(QString("Default"));
+  }
+  return list;
 }
 
 bool ImageDocument::isDefault() const { return url() == defaultUrl(); }
@@ -163,15 +189,15 @@ void ImageDocument::setGamma(qreal gamma)
   }
 }
 
-void ImageDocument::setAlphaMode(AlphaMode alphaMode)
+void ImageDocument::setDisplayMode(DisplayMode displayMode)
 {
-  if (alphaMode_ != alphaMode) {
-    alphaMode_ = alphaMode;
+  if (displayMode_ != displayMode) {
+    displayMode_ = displayMode;
 
     QSettings settings;
-    settings.setValue("Rendering/AlphaMode", QVariant((int)alphaMode));
+    settings.setValue("Rendering/DisplayMode", QVariant((int)displayMode));
 
-    emit alphaModeChanged();
+    emit displayModeChanged();
     emit propertyChanged();
   }
 }
@@ -203,6 +229,15 @@ void ImageDocument::setComparisonSeparator(float value)
   }
 }
 
+void ImageDocument::setLayer(int layer)
+{
+  if (layer_ != layer) {
+    layer_ = layer;
+    emit layerChanged();
+    emit propertyChanged();
+  }
+}
+
 void ImageDocument::store(QUrl const& url)
 {
   QFileInfo file(url.toLocalFile());
@@ -222,14 +257,22 @@ void ImageDocument::store(QUrl const& url)
 QVector4D ImageDocument::pixelValue() const
 {
   QVector4D texel;
-  texel.setX(image_->value(pixelPosition_.x(), pixelPosition_.y(), 0));
+  int l = std::clamp(layer_, 0, int(image_->layers().size()));
+  texel.setX(image_->value(pixelPosition_.x(), pixelPosition_.y(), 0, l));
   if (channels() > 1) {
-    texel.setY(image_->value(pixelPosition_.x(), pixelPosition_.y(), 1));
+    texel.setY(image_->value(pixelPosition_.x(), pixelPosition_.y(), 1, l));
     if (channels() > 2) {
-      texel.setZ(image_->value(pixelPosition_.x(), pixelPosition_.y(), 2));
+      texel.setZ(image_->value(pixelPosition_.x(), pixelPosition_.y(), 2, l));
       if (channels() > 3) {
-        texel.setW(image_->value(pixelPosition_.x(), pixelPosition_.y(), 3));
+        texel.setW(image_->value(pixelPosition_.x(), pixelPosition_.y(), 3, l));
       }
+    }
+  }
+  if (image_->layers().size() > l && image_->layers()[l].display == Image::Integer) {
+    for (int i = 0; i < channels(); ++i) {
+      uint32_t integer;
+      std::memcpy(&integer, &texel[i], sizeof(float));
+      texel[i] = float(integer);
     }
   }
   return texel;

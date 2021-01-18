@@ -46,18 +46,18 @@ void pic::pic_input_file::read_information_header(format_type& format, double& e
           std::string format_string;
           std::istringstream istringstream(value);
           istringstream.unsetf(std::ios_base::skipws);
-          istringstream >> std::ws >> format_string >> std::ws;
-          if (!istringstream || !istringstream.eof() || ((format_string != "32-bit_rle_rgbe") && (format_string != "32-bit_rle_xyze"))) {
+          istringstream >> std::ws >> format_string;// >> std::ws;
+          if ((format_string != "32-bit_rle_rgbe") && (format_string != "32-bit_rle_xyze")) {
             #ifdef PIC_DEBUG
               std::cerr << "pic: " << line_number_ << ": " << "error" << std::endl;
             #endif
-            throw pic::runtime_error(std::string("pic: error: ") + __FUNCTION__);
+            throw pic::runtime_error(std::string("Unsupported format: ") + format_string);
           }
           if (number_of_format_lines > 0) {
             #ifdef PIC_DEBUG
               std::cerr << "pic: " << line_number_ << ": " << "error" << std::endl;
             #endif
-            throw pic::runtime_error(std::string("pic: error: ") + __FUNCTION__);
+            throw pic::runtime_error(std::string("Encountered multiple format lines."));
           }
           #ifdef PIC_DEBUG
             std::cerr << "pic: " << line_number_ << ": " << "info: " << "FORMAT=" << format_string << std::endl;
@@ -77,11 +77,11 @@ void pic::pic_input_file::read_information_header(format_type& format, double& e
           std::istringstream istringstream(value);
           istringstream.unsetf(std::ios_base::skipws);
           istringstream >> std::ws >> exposure;
-          if (!istringstream || !istringstream.eof() || (exposure < 0.0)) {
+          if (exposure < 0.0) {
             #ifdef PIC_DEBUG
               std::cerr << "pic: " << line_number_ << ": " << "error" << std::endl;
             #endif
-            throw pic::runtime_error(std::string("pic: error: ") + __FUNCTION__);
+            throw pic::runtime_error(std::string("Invalid exposure value: ") + std::to_string(exposure));
           }
           #ifdef PIC_DEBUG
             std::cerr << "pic: " << line_number_ << ": " << "info: " << "EXPOSURE=" << exposure << std::endl;
@@ -96,7 +96,7 @@ void pic::pic_input_file::read_information_header(format_type& format, double& e
           std::istringstream istringstream(value);
           istringstream.unsetf(std::ios_base::skipws);
           istringstream >> std::ws >> colorcorr[0] >> space_colorcorr_0_colorcorr_1 >> std::ws >> colorcorr[1] >> space_colorcorr_1_colorcorr_2 >> std::ws >> colorcorr[2] >> std::ws;
-          if (!istringstream || !istringstream.eof() || (!std::isspace(space_colorcorr_0_colorcorr_1)) || (!std::isspace(space_colorcorr_1_colorcorr_2))) {
+          if (!std::isspace(space_colorcorr_0_colorcorr_1) || !std::isspace(space_colorcorr_1_colorcorr_2)) {
             #ifdef PIC_DEBUG
               std::cerr << "pic: " << line_number_ << ": " << "error" << std::endl;
             #endif
@@ -130,12 +130,6 @@ void pic::pic_input_file::read_information_header(format_type& format, double& e
           std::istringstream istringstream(value);
           istringstream.unsetf(std::ios_base::skipws);
           istringstream >> std::ws >> pixaspect;
-          if (!istringstream || !istringstream.eof()) {
-            #ifdef PIC_DEBUG
-              std::cerr << "pic: " << line_number_ << ": " << "error" << std::endl;
-            #endif
-            throw pic::runtime_error(std::string("pic: error: ") + __FUNCTION__);
-          }
           #ifdef PIC_DEBUG
             std::cerr << "pic: " << line_number_ << ": " << "info: " << "PIXASPECT=" << pixaspect << std::endl;
           #endif
@@ -163,7 +157,7 @@ void pic::pic_input_file::read_information_header(format_type& format, double& e
           std::istringstream istringstream(value);
           istringstream.unsetf(std::ios_base::skipws);
           istringstream >> std::ws >> primaries[0][0] >> space_primaries_0_0_primaries_0_1 >> std::ws >> primaries[0][1] >> space_primaries_0_1_primaries_1_0 >> std::ws >> primaries[1][0] >> space_primaries_1_0_primaries_1_1 >> std::ws >> primaries[1][1] >> space_primaries_1_1_primaries_2_0 >> std::ws >> primaries[2][0] >> space_primaries_2_0_primaries_2_1 >> std::ws >> primaries[2][1] >> space_primaries_2_1_primaries_3_0 >> std::ws >> primaries[3][0] >> space_primaries_3_0_primaries_3_1 >> std::ws >> primaries[3][1];
-          if (!istringstream || !istringstream.eof() || (!std::isspace(space_primaries_0_0_primaries_0_1)) || (!std::isspace(space_primaries_0_1_primaries_1_0)) || (!std::isspace(space_primaries_1_0_primaries_1_1)) || (!std::isspace(space_primaries_1_1_primaries_2_0)) || (!std::isspace(space_primaries_2_0_primaries_2_1)) || (!std::isspace(space_primaries_2_1_primaries_3_0)) || (!std::isspace(space_primaries_3_0_primaries_3_1))) {
+          if ((!std::isspace(space_primaries_0_0_primaries_0_1)) || (!std::isspace(space_primaries_0_1_primaries_1_0)) || (!std::isspace(space_primaries_1_0_primaries_1_1)) || (!std::isspace(space_primaries_1_1_primaries_2_0)) || (!std::isspace(space_primaries_2_0_primaries_2_1)) || (!std::isspace(space_primaries_2_1_primaries_3_0)) || (!std::isspace(space_primaries_3_0_primaries_3_1))) {
             #ifdef PIC_DEBUG
               std::cerr << "pic: " << line_number_ << ": " << "error" << std::endl;
             #endif
@@ -251,8 +245,7 @@ void pic::pic_input_file::read_resolution_string(resolution_string_type& resolut
   std::istringstream istringstream(line);
   istringstream.unsetf(std::ios_base::skipws);
   istringstream >> std::ws >> sign[0] >> dim[0] >> space_dim_0_resolution_0 >> std::ws >> resolution[0] >> space_resolution_0_sign_1 >> std::ws >> sign[1] >> dim[1] >> space_dim_1_resolution_1 >> std::ws >> resolution[1] >> std::ws;
-  if (!istringstream || !istringstream.eof()
-    || ((sign[0] != '+') && (sign[0] != '-'))
+  if ( ((sign[0] != '+') && (sign[0] != '-'))
     || ((dim[0] != 'X') && (dim[0] != 'Y'))
     || (!std::isspace(space_dim_0_resolution_0))
     || (resolution[0] == 0)
@@ -266,7 +259,7 @@ void pic::pic_input_file::read_resolution_string(resolution_string_type& resolut
     #ifdef PIC_DEBUG
       std::cerr << "pic: " << line_number_ << ": " << "error" << std::endl;
     #endif
-    throw pic::runtime_error(std::string("pic: error: ") + __FUNCTION__);
+    throw pic::runtime_error(std::string("Invalid resolution: ") + line);
   }
   #ifdef PIC_DEBUG
     std::cerr << "pic: " << line_number_ << ": " << "info: " << sign[0] << dim[0] << " " << resolution[0] << " " << sign[1] << dim[1] << " " << resolution[1] << "\n";

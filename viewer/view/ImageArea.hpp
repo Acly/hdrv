@@ -32,7 +32,7 @@ signals:
 
 public slots:
   void sync();
-  void cleanup() { renderer_ = nullptr; }
+  void cleanup();
 
 protected:
   void mousePressEvent(QMouseEvent * event) override;
@@ -40,7 +40,8 @@ protected:
   void mouseMoveEvent(QMouseEvent * event) override;
   void wheelEvent(QWheelEvent * event) override;
   void hoverMoveEvent(QHoverEvent * event) override;
-  void geometryChanged(const QRectF & newGeometry, const QRectF & oldGeometry) override;
+  void geometryChange(const QRectF & newGeometry, const QRectF & oldGeometry) override;
+  void releaseResources() override;
 
 private slots:
   void handleWindowChanged(QQuickWindow * window);

@@ -23,12 +23,12 @@ class ImageCollection : public QObject
 public:
   ImageCollection(QObject * parent = nullptr);
 
-  static int itemCount(QQmlListProperty<ImageDocument> * list)
+  static qsizetype itemCount(QQmlListProperty<ImageDocument> * list)
   {
-    return (int)reinterpret_cast<Collection *>(list->data)->size();
+    return reinterpret_cast<Collection *>(list->data)->size();
   }
 
-  static ImageDocument * itemAt(QQmlListProperty<ImageDocument> * list, int index)
+  static ImageDocument * itemAt(QQmlListProperty<ImageDocument> * list, qsizetype index)
   {
     return reinterpret_cast<Collection *>(list->data)->at(index);
   }

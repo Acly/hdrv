@@ -1,8 +1,11 @@
 <RCC>
+  <qresource prefix="/">
+    <file>qtquickcontrols2.conf</file>
+  </qresource>
   <qresource prefix="/hdrv">
     <file>view/ExportButton.qml</file>
     <file>view/Main.qml</file>
-    <file>view/TabBar.qml</file>
+    <file>view/TabNav.qml</file>
     <file>view/ImageProperties.qml</file>
     <file>view/AppSettings.qml</file>
     <file>shader/RenderImage.vert</file>
@@ -11,9 +14,7 @@
     <file>../media/Save.png</file>
     <file>../media/Properties.png</file>
     <file>../media/Close.png</file>
-    <file>../media/CloseActive.png</file>
     <file>../media/Compare.png</file>
-    <file>../media/CompareActive.png</file>
     <file>../media/FormatHDR.png</file>
     <file>../media/FormatPFM.png</file>
     <file>../media/FormatEXR.png</file>
@@ -21,6 +22,5 @@
     <file>../media/Comparison.png</file>
     <file>../media/Default.png</file>
     <file>../media/Settings.png</file>
-    <file>../media/SingleInstance.png</file>
   </qresource>
 </RCC>
