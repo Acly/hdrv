@@ -1,6 +1,7 @@
 #include <view/ImageRenderer.hpp>
 
 #include <QFile>
+#include <QOpenGLPixelTransferOptions>
 #include <QTextStream>
 #include <QQuickWindow>
 #include <QSGRendererInterface>
@@ -76,11 +77,15 @@ QOpenGLTexture::PixelType pixelType(Image const& image)
 
 std::unique_ptr<QOpenGLTexture> createTexture(Image const& image, Image::Layer const& layer)
 {
+  QOpenGLPixelTransferOptions options;
+  if (image.format() == Image::Byte) {
+    options.setAlignment(1); // GL_UNPACK_ALIGNMENT
+  }
   auto texture = std::make_unique<QOpenGLTexture>(QOpenGLTexture::Target2D);
   texture->setSize(image.width(), image.height());
   texture->setFormat(format(image));
   texture->allocateStorage(pixelFormat(layer.channels), pixelType(image));
-  texture->setData(pixelFormat(layer.channels), pixelType(image), image.data() + layer.offset);
+  texture->setData(pixelFormat(layer.channels), pixelType(image), image.data() + layer.offset, &options);
   texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
   texture->setMagnificationFilter(QOpenGLTexture::Nearest);
   texture->setWrapMode(QOpenGLTexture::ClampToBorder);

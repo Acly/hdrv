@@ -575,7 +575,7 @@ Result<bool> Image::storeImage(std::string const& path, float brightness, float 
   QImage img(width(), height(), format);
   for (int y = 0; y < height(); ++y) {
     for (int x = 0; x < width(); ++x) {
-      auto p = img.bits() + channels()*(y*width() + x);
+      auto p = img.bits() + y * img.bytesPerLine() + x * channels();
       for (int c = 0; c < channels(); ++c) {
         p[c] = std::max(std::min(std::pow(brightness * value(x, y, c), gamma), 1.0f), 0.0f) * 255.0f;
       }
@@ -590,14 +590,20 @@ Result<Image> Image::loadImage(std::string const& path)
 {
   QImage img;
   if (img.load(path.c_str())) {
-    img = img.convertToFormat(img.hasAlphaChannel() ? QImage::Format_RGBA8888 : QImage::Format_RGB888).mirrored();
+    img = img.convertToFormat(img.hasAlphaChannel() ? QImage::Format_RGBA8888 : QImage::Format_RGB888);
 
     int w = img.width();
     int h = img.height();
     int c = img.hasAlphaChannel() ? 4 : 3;
 
     std::vector<uint8_t> data(w * h * c);
-    std::copy(img.bits(), img.bits() + w*h*c, data.begin());
+    // Copy pixels line by line. QImage pixel lines are not necessarily packed, they have an alignment
+    // requirement, so for odd resolutions there might be padding after each line. Our buffers are packed.
+    size_t stride = img.bytesPerLine();
+    Q_ASSERT(stride >= w * c);
+    for (int y = 0; y < h; ++y) {
+      std::memcpy(data.data() + y * w * c, img.bits() + (h - y - 1) * stride, w * c);
+    }
     return Result<Image>(Image(w, h, c, Byte, std::move(data)));
   } else {
     return Result<Image>(std::string("Image loader failed."));
